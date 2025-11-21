@@ -1,0 +1,9 @@
+{
+  "folders": [
+    { "path": "." }
+  ],
+  "settings": {
+    // You can keep or add project-specific settings here.
+    // We copied your .vscode settings in step 2.
+  }
+}
