@@ -102,25 +102,27 @@ The `theme.lua` file controls: - Font family\
 
 ## Folder Structure
 
-Expected layout in your home directory:
+Installed under your home config:
 
 ```text
-~/.config/conky/
-  calendar.conky.conf
-  date-time.conky.conf
-  net-sys.conky.conf
-  notes.conky.conf
-  sys-info.conky.conf
-  weather.conky.conf
-  theme.lua
-  lua/
-  scripts/
-  screenshots/
-  wallpapers/
-  owm.env.example
-  owm.vars.example
-  (your own) owm.env
-  (your own) owm.vars
+~/.config/conky/gtex62-clean-suite/
+├── theme.lua
+├── widgets/
+│   ├── sys-info.conky.conf
+│   ├── weather.conky.conf
+│   ├── calendar.conky.conf
+│   ├── date-time.conky.conf
+│   ├── notes.conky.conf
+│   ├── net-sys.conky.conf
+│   ├── owm.env              # your OpenWeather API key (user-provided; not in git)
+│   └── owm.vars             # your OWM config/paths (user-provided; not in git)
+├── lua/                     # shared Lua modules for all widgets
+├── scripts/                 # helper scripts (e.g., owm_fetch.sh, wan_ip.sh, start-conky.sh)
+├── icons/
+├── wallpapers/
+├── screenshots/
+├── LICENSE
+└── README.md
 ```
 
 ---
@@ -150,7 +152,7 @@ sudo sensors-detect
 
 ``` bash
 cd ~/.config
-git clone https://github.com/YOURNAME/conky-suitename.git conky
+git clone https://github.com/gtex62/gtex62-clean-suite.git conky
 ```
 
 ---
@@ -165,7 +167,7 @@ There are two files involved:
 Start from the provided examples:
 
 ```bash
-cd ~/.config/conky
+cd ~/.config/conky/gtex62-clean-suite/widgets/
 cp owm.env.example  owm.env
 cp owm.vars.example owm.vars
 ```
@@ -189,24 +191,22 @@ In `owm.vars`:
   to your actual Linux username (or full path).  
 - Optionally adjust LAT/LON/UNITS/LANG to match your location.
 
-> **Note:** `owm.env` and `owm.vars` are intentionally `.gitignore`d, so your real API key and paths are never pushed to GitHub.
-
 ---
 
 ### 4. Start widgets
 
 The suite includes a helper script to start all widgets at once:
 ```bash
-~/.config/conky/scripts/start-conky.sh &
+~/.config/conky/gtex62-clean-suite/scripts/start-conky.sh &
 ```
 
 You can also start individual widgets manually if you prefer:
 ``` bash
-conky -c ~/.config/conky/sys-info.conky.conf &
-conky -c ~/.config/conky/weather.conky.conf &
-conky -c ~/.config/conky/calendar.conky.conf &
-conky -c ~/.config/conky/date-time.conky.conf &
-conky -c ~/.config/conky/notes.conky.conf &
+conky -c ~/.config/conky/gtex62-clean-suite/widgets/sys-info.conky.conf &
+conky -c ~/.config/conky/gtex62-clean-suite/widgets/weather.conky.conf &
+conky -c ~/.config/conky/gtex62-clean-suite/widgets/calendar.conky.conf &
+conky -c ~/.config/conky/gtex62-clean-suite/widgets/date-time.conky.conf &
+conky -c ~/.config/conky/gtex62-clean-suite/widgets/notes.conky.conf &
 ```
 Add the script to your desktop environment’s startup applications to launch the suite automatically on login.
 
@@ -229,7 +229,7 @@ If widgets appear off-screen or stacked incorrectly:
 4. Save and reload that widget:
    ```bash
    pkill conky
-   ~/.config/conky/scripts/start-conky.sh &
+   ~/.config/conky/gtex62-clean-suite/scripts/start-conky.sh &
    ```
 
 Tip: You can experiment interactively by changing the numbers in small steps (e.g., ±50 px).
@@ -241,7 +241,7 @@ Tip: You can experiment interactively by changing the numbers in small steps (e.
 Most of the visual behavior is controlled from:
 
 ```text
-~/.config/conky/theme.lua
+~/.config/conky/gtex62-clean-suite/theme.lua
 ```
 
 Things you can change there:
@@ -278,4 +278,5 @@ https://github.com/JosephB2000/Amnio
 
 ## License
 
-MIT License
+This project is licensed under the **MIT License**.
+
