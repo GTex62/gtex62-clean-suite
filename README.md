@@ -151,8 +151,9 @@ sudo sensors-detect
 ### 2. Clone this repo
 
 ``` bash
-cd ~/.config
-git clone https://github.com/gtex62/gtex62-clean-suite.git conky
+mkdir -p ~/.config/conky
+cd ~/.config/conky
+git clone https://github.com/GTex62/gtex62-clean-suite.git
 ```
 
 ---
