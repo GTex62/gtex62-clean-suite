@@ -13,7 +13,7 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-SRC="$HOME/.config/gtex62-clean-suite/conky"
+SRC="$HOME/.config/conky/gtex62-clean-suite"
 HOST="$(hostname -s || echo host)"
 STAMP="$(date +%Y%m%d-%H%M)"
 

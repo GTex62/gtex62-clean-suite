@@ -1,5 +1,5 @@
 Use it:
 
-Backup: ~/.config/conky/backup-restore-conky.sh backup
+Backup: ~/.config/conky/gtex62-clean-suite/scripts/backup-restore-conky.sh backup
 
-Restore: ~/.config/conky/backup-restore-conky.sh restore ~/conky-backup-<host>-<date>.tar.gz
+Restore: ~/.config/conky/gtex62-clean-suite/scripts/backup-restore-conky.sh restore ~/conky-backup-<host>-<date>.tar.gz
