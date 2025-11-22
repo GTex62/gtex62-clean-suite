@@ -1,5 +1,11 @@
 # gtex62-clean-suite
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/GTex62/gtex62-clean-suite.svg)](https://github.com/GTex62/gtex62-clean-suite/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/GTex62/gtex62-clean-suite.svg)](https://github.com/GTex62/gtex62-clean-suite/issues)
+[![Last commit](https://img.shields.io/github/last-commit/GTex62/gtex62-clean-suite.svg)](https://github.com/GTex62/gtex62-clean-suite/commits/main)
+
+
 A modular, minimalist Conky desktop suite for Linux Mint (and other
 distros), inspired by several Rainmeter skins and rebuilt for Conky
 using Lua, custom widgets, themed slash bars, GPU/VRAM bars, weather
