@@ -6,7 +6,7 @@
 #   $HOME/.config/conky/gtex62-clean-suite/scripts/backup-restore-conky.sh backup
 #
 # Behavior:
-# - Backup prefers DEST dir /mnt/NAS_Data/Data/Linux/backups if it exists & is writable.
+# - Backup prefers DEST dir /mnt/NAS_Data/Data/Linux/backups/conky if it exists & is writable.
 # - Otherwise backs up to $HOME as conky_<host>_<YYYYmmdd-HHMM>.tar.gz
 # - Includes .vscode (Lua stubs/settings), scripts, *.conky.conf, *.lua, autostart desktop.
 # - Excludes caches and logs.
@@ -19,8 +19,8 @@ STAMP="$(date +%Y%m%d-%H%M)"
 
 # Choose default destination directory
 DEFAULT_DEST_DIR="$HOME"
-if [ -d "/mnt/NAS_Data/Data/Linux/backups" ] && [ -w "/mnt/NAS_Data/Data/Linux/backups" ]; then
-  DEFAULT_DEST_DIR="/mnt/NAS_Data/Data/Linux/backups"
+if [ -d "/mnt/NAS_Data/Data/Linux/backups/conky" ] && [ -w "/mnt/NAS_Data/Data/Linux/backups/conky" ]; then
+  DEFAULT_DEST_DIR="/mnt/NAS_Data/Data/Linux/backups/conky"
 fi
 
 DEST="${DEFAULT_DEST_DIR}/conky_${HOST}_${STAMP}.tar.gz"

@@ -350,8 +350,8 @@ function conky_owm_draw_horizon()
 
   -- Get arc color from THEME.weather.arc.day_color / night_color
   local arc_col_path = is_night
-      and "weather.arc.night_color"
-      or "weather.arc.day_color"
+      and "weather.night_color"
+      or "weather.day_color"
 
   local arc_col = tget(THEME, arc_col_path)
 
@@ -1286,7 +1286,7 @@ function conky_advisories()
 
   -- Get TSV rows within radius: kind\tphen\tregion\tzone\tfrom\tto
   local cmd     = string.format("%q %q %d",
-    home .. "/.config/conky/scripts/airsig_filter.sh", station, radius)
+    home .. "/.config/conky/gtex62-clean-suite/scripts/airsig_filter.sh", station, radius)
   local p       = io.popen(cmd, "r"); if not p then return "" end
   local raw = p:read("*a") or ""; p:close()
   raw = (raw:gsub("%s+$", ""))

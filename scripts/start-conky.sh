@@ -12,10 +12,10 @@ conky -c ~/.config/conky/gtex62-clean-suite/widgets/sys-info.conky.conf &
 # Network info below system info
 conky -c ~/.config/conky/gtex62-clean-suite/widgets/net-sys.conky.conf &
 
-# Weather center top
+# Weather center below date & time
 conky -c ~/.config/conky/gtex62-clean-suite/widgets/weather.conky.conf &
 
-# Date & time below weather
+# Date & time above weather
 conky -c ~/.config/conky/gtex62-clean-suite/widgets/date-time.conky.conf &
 
 # Calendar on top right
@@ -23,3 +23,12 @@ conky -c ~/.config/conky/gtex62-clean-suite/widgets/calendar.conky.conf &
 
 #Notes on right edge
 conky -c ~/.config/conky/gtex62-clean-suite/widgets/notes.conky.conf &
+
+# Music widget center below weather
+conky -c ~/.config/conky/gtex62-clean-suite/widgets/music.conky.conf &
+
+# pfSense widget center bottom
+conky -c ~/.config/conky/gtex62-clean-suite/widgets/pfsense.conky.conf &
+
+# AP WBE530 widget bottom right
+#conky -c ~/.config/conky/gtex62-clean-suite/widgets/ap-wbe530.conky.conf &

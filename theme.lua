@@ -59,16 +59,16 @@ return {
   font_cal_title    = 'DejaVu Sans Mono:style=Bold:size=10',
 
   -- Sizes / spacing (px)
-  cal_cell_w        = 44,
-  cal_cell_h        = 26,
+  cal_cell_w        = 50,
+  cal_cell_h        = 32,
   cal_col_gap       = 2,
   cal_row_gap       = 3,
   cal_border_lw     = 0, -- 0 = no cell borders
-  cal_title_size    = 18,
+  cal_title_size    = 20,
   cal_weekday_size  = 12,
-  cal_day_size      = 16,
+  cal_day_size      = 20,
   cal_title_h       = 30,
-  cal_title_gap     = 8, -- extra gap between title and weekdays
+  cal_title_gap     = 18, -- extra gap between title and weekdays
 
   -- Colors
   calendar_hilite   = 'FFD54A', -- highlight color for today / selected
@@ -133,8 +133,8 @@ return {
     arc             = { dx = 160, dy = 90, r = 170, start = 180, ["end"] = 0 },
 
     -- Arc stroke colors (RGBA, 0.0–1.0 range)
-    day_color       = { 0.65, 0.65, 0.65, 1.0 }, -- gray for day
-    night_color     = { 0.45, 0.60, 0.95, 1.0 }, -- light blue for night
+    day_color       = { 0.65, 0.65, 0.65, 1.0 },  -- gray for day
+    night_color     = { 0.14, 0.14, 0.14, 1.00 }, -- gray14 for night
 
     -- Sunrise / sunset time labels at arc ends
     sun_time_labels = {
@@ -176,7 +176,7 @@ return {
 
     -- 5-day forecast layout (tile strip under the main widget)
     forecast        = {
-      origin = { x = 174, y = 265 }, -- top-left of the strip (under main widget)
+      origin = { x = 180, y = 265 }, -- top-left of the strip (under main widget)
       tiles  = 5,                    -- number of days to show (today..today+4)
       gap    = 30,                   -- horizontal gap between tiles
 
@@ -214,11 +214,124 @@ return {
     -- },
   },
 
+
+  ----------------------------------------------------------------
+  -- Music arc layout and styles
+  --
+  ----------------------------------------------------------------
+  music = {
+    hide_when_inactive = false, -- set to false to always show the widget
+    idle_hide_after_s  = 10,    -- your existing timeout
+    inactive_message   = "Play music, feel better",
+
+    bars               = {
+      animate_idle = false, -- set to false to disable the animation
+      count = 24,
+      width = 12,
+      max_height = 68,
+      lift_px = 48,
+      color = "FFD54A",
+      alpha = 1.0,
+      speed_px_u = 2,
+      wiggle_mult = 0.6,
+    },
+    -- Red volume marker (follows the arc; 0% = left end, 100% = right end)
+    volume_marker      = {
+      color         = "FF0000",
+      diameter      = 16,
+      alpha         = 1.0,
+      -- optional outline
+      outline_color = "FF0000",
+      outline_alpha = 1.0,
+      outline_width = 2,
+
+      -- optional muted behavior: "hide" | "dim" | "normal"
+      muted_mode    = "dim",
+      muted_alpha   = 0.35, -- only used if muted_mode = "dim"
+    },
+    arc                = {
+      -- Mirror weather arc geometry by default; keep endpoints identical.
+      dx             = 0,        -- horizontal offset from widget center
+      dy             = 50,       -- pushes the arc *down* (smile under the line)
+      r              = 140,      -- same as weather.arc.r
+      start          = 200,      -- left-end angle (deg)
+      ["end"]        = -20,      -- right-end angle (deg)  (Lua reserved word trick)
+      base_color     = "A0A0A0", -- same feel as weather arc
+      progress_color = "242424", -- gray14
+
+    },
+    baseline           = {
+      weight = 2
+    },
+    marker             = {
+      diameter = 20,
+      color    = "FFD54A"
+    },
+    time_labels        = {
+      color     = "A0A0A0",
+      pt        = 18,
+      dy        = -18, -- how far below endpoints (positive goes down)
+      lx_offset = -10,
+      rx_offset = -10,
+    },
+
+    ----------------------------------------------------------------
+    -- Album art placement (source of truth)
+    -- We no longer use the arc-based placement or ${lua_parse music_cover}.
+    -- The cover image is injected by: ${execp lua .../lua/cover_line.lua}
+    -- which reads THESE fixed coordinates/sizes.
+    -- If you want to move/resize the art, change these values.
+    --
+    -- Why fixed? Because your proven-good values live here, and they match
+    -- what you were using in music.conky.conf (-p 252,160 -s 62x60).
+    ----------------------------------------------------------------
+    art_fixed          = {
+      x = 252, -- left position (pixels)
+      y = 160, -- top position (pixels)
+      w = 62,  -- width  (pixels)
+      h = 60,  -- height (pixels)
+    },
+
+
+    text = {
+      title = {
+        color   = "FFFFFF",
+        pt      = 15,
+        dy      = -6,
+        dx      = 0,
+        field_w = 250,
+        field_x = 288,
+        marquee = { gap_px = 0, safety_px = 0, speed_px_u = 18 },
+      },
+      album = {
+        color   = "FFFFFF",
+        pt      = 11,
+        dy      = 18,
+        dx      = 0,
+        field_w = 280,
+        field_x = 267,
+        marquee = { gap_px = 0, safety_px = 0, speed_px_u = 4 },
+      },
+      artist = {
+        color   = "FFFFFF",
+        pt      = 14,
+        dy      = 128,
+        dx      = 0,
+        field_w = 200,
+        field_x = 312,
+        marquee = { gap_px = 0, safety_px = 0, speed_px_u = 12 },
+      },
+
+    },
+  },
+
+
+
   ----------------------------------------------------------------
   -- Planet + horizon marker styles
   -- Used by owm.lua to draw planets + sun/moon markers on the arc.
   ----------------------------------------------------------------
-  planets           = {
+  planets         = {
     -- Clip planets to the visible arc span
     clip             = true,
 
@@ -240,7 +353,7 @@ return {
     },
   },
 
-  weather_markers   = {
+  weather_markers = {
     -- Hollow sun marker on the arc
     sun = {
       diameter = 36,                         -- outer diameter in pixels

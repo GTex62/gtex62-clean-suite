@@ -34,6 +34,13 @@ while keeping everything text-first, elegant, and unobtrusive.
 ### Calendar Widget
 ![Calendar](screenshots/calendar.png)
 
+### Music / Now-Playing Widget
+![Music](screenshots/music.png)
+
+Additional states:
+- `music1.png`
+- `music2.png`
+
 
 ## Wallpapers
 
@@ -95,6 +102,12 @@ These wallpapers are licensed for **personal, non-commercial use**.
 -   Readable right-hand column\
 -   Monospaced or themed fonts
 
+### Music / Now-Playing Widget
+
+-   Track title/artist/album with marquee scrolling\
+-   Arc progress + time labels\
+-   Album art (cached cover)
+
 ### Shared Theme System
 
 The `theme.lua` file controls: - Font family\
@@ -139,6 +152,8 @@ Installed under your home config:
 - `curl`  
 - `jq`  
 - `lm-sensors` (for temperatures)  
+- `playerctl` (music metadata/status)  
+- `pactl` (optional; volume/mute via PulseAudio/PipeWire)  
 - For GPU widget:
   - NVIDIA GPU
   - Working `nvidia-smi` command
@@ -150,7 +165,7 @@ Installed under your home config:
 ### 1. Install Conky + dependencies
 
 ``` bash
-sudo apt install conky-all curl jq lm-sensors
+sudo apt install conky-all curl jq lm-sensors playerctl pulseaudio-utils
 sudo sensors-detect
 ```
 
@@ -214,6 +229,7 @@ conky -c ~/.config/conky/gtex62-clean-suite/widgets/weather.conky.conf &
 conky -c ~/.config/conky/gtex62-clean-suite/widgets/calendar.conky.conf &
 conky -c ~/.config/conky/gtex62-clean-suite/widgets/date-time.conky.conf &
 conky -c ~/.config/conky/gtex62-clean-suite/widgets/notes.conky.conf &
+conky -c ~/.config/conky/gtex62-clean-suite/widgets/music.conky.conf &
 ```
 Add the script to your desktop environment’s startup applications to launch the suite automatically on login.
 
@@ -260,6 +276,7 @@ Things you can change there:
 - Spacing for separators and sections
 - Calendar spacing and padding
 - Weather arc and planet styling options (if you enable planets)
+- Music widget arc/bars, volume marker, and album art placement (theme.music, especially theme.music.art_fixed)
 
 Each `.conky.conf` file uses the same shared theme, so adjusting `theme.lua` lets you redesign the look of the entire suite without editing each widget individually.
 
@@ -286,4 +303,3 @@ https://github.com/JosephB2000/Amnio
 ## License
 
 This project is licensed under the **MIT License**.
-

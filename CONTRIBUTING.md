@@ -21,7 +21,8 @@ Thanks for your interest!
 
 ## Project layout
 
-* `widgets/` – widget configs/scripts
+* `widgets/` – widget configs
+* `scripts/` – various scripts
 * `lua/` – shared Lua helpers
 * `theme.lua` – fonts/colors/sizes
 * `screenshots/` – small PNGs shown in README
