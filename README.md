@@ -282,6 +282,57 @@ Each `.conky.conf` file uses the same shared theme, so adjusting `theme.lua` let
 
 ---
 
+### Astronomy: Moon & Planet Positions
+
+The weather widget can optionally display the **Moon and visible planets**
+(Mercury, Venus, Mars, Jupiter, Saturn) along the horizon arc.
+
+These positions are generated externally and cached in:
+
+```text
+~/.cache/conky/sky.vars
+```
+
+#### Dependency
+
+Planet and moon calculations require PyEphem:
+
+```bash
+sudo apt install python3-ephem
+```
+
+Note: On Linux Mint / Ubuntu, installing via pip may fail due to
+Python's externally managed environment (PEP 668).
+The `python3-ephem` system package is the supported method.
+
+#### Generator script
+
+This repository includes:
+
+```text
+scripts/sky_update.py
+```
+
+This script:
+
+- Calculates current azimuth / altitude for the Moon and planets
+- Converts positions to horizon-arc angles
+- Writes values into `~/.cache/conky/sky.vars` for `owm.lua` to consume
+
+You can test it manually:
+
+```bash
+~/.config/conky/gtex62-clean-suite/scripts/sky_update.py
+```
+
+#### Automatic updates (recommended)
+
+For live tracking, the generator should be run periodically.
+A systemd user timer is recommended so updates continue across restarts
+and Conky reloads.
+
+---
+
 ## Credits & Inspirations
 
 ### Plainext (Rainmeter → Conky)
