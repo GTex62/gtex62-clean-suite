@@ -79,6 +79,18 @@ def write_vars(lat, lon):
             lines.append(f"MOON_AZ={az:.3f}")
             lines.append(f"MOON_ALT={alt:.3f}")
             lines.append(f"MOON_THETA={th:.3f}")
+
+            # Moon rise/set epoch seconds (UTC)
+            try:
+                from datetime import datetime, timezone
+                mr = obs.next_rising(ephem.Moon())
+                ms = obs.next_setting(ephem.Moon())
+                mr_dt = ephem.Date(mr).datetime().replace(tzinfo=timezone.utc)
+                ms_dt = ephem.Date(ms).datetime().replace(tzinfo=timezone.utc)
+                lines.append(f"MOON_RISE_TS={int(mr_dt.timestamp())}")
+                lines.append(f"MOON_SET_TS={int(ms_dt.timestamp())}")
+            except Exception:
+                pass
         else:
             # owm.lua can read either *_THETA or *_AZ; we provide both for safety.
             lines.append(f"{name}_AZ={az:.3f}")
