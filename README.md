@@ -108,6 +108,36 @@ These wallpapers are licensed for **personal, non-commercial use**.
 -   Arc progress + time labels\
 -   Album art (cached cover)
 
+### Network & Infrastructure Widgets
+
+#### pfSense Widget
+- Dedicated pfSense monitoring widget (traffic arcs, totals, pfBlockerNG, Pi-hole status)
+- Configured via `theme-pf.lua` and environment variable `PFSENSE_HOST`
+- See: `README-pfsense-widget.md`
+
+#### Access Point (Zyxel WBE530) Widget
+- Live status and client summaries for Zyxel APs
+- Configured via environment variables `AP_IPS` and `AP_LABELS`
+- Uses helper scripts in `scripts/`
+
+### Lyrics Window
+
+- Copy `widgets/lyrics.vars.example` to `widgets/lyrics.vars` and adjust paths and providers
+- Provider tiers:
+  - **NOAPI** — default, no keys required  
+    Default providers: `lrclib`, `lyrics_ovh`, `lololyrics`, `chartlyrics`
+  - **SCRAPE** — optional, may break, use at your own risk  
+    Optional providers: `azlyrics`, `songlyrics`, `elyrics`, `letras`, `lyricfind`, `musixmatch`
+  - **API** — requires keys  
+    Providers: `genius` (token required)
+- The order listed in `lyrics.vars` is the order searched
+- `widgets/lyrics.vars` is gitignored to protect secrets
+- Manual lyrics:
+  - Create `Artist - Title.txt` or `.lrc` files
+  - Store them in `~/Music/lyrics/`
+  - Copy/paste lyrics from a website
+  - The widget picks them up automatically on the next track
+
 ### Shared Theme System
 
 The `theme.lua` file controls: - Font family\
