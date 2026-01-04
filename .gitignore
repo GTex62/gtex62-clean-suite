@@ -7,3 +7,10 @@
 # Secrets
 widgets/owm.env
 widgets/owm.vars
+widgets/lyrics.vars
+scripts/ap_ipmap.csv
+
+# local/temporary
+*.bak
+*.bak2
+screenshots/.comments/

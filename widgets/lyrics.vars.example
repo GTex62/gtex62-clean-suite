@@ -1,0 +1,27 @@
+# Copy to widgets/lyrics.vars and adjust paths/providers.
+# WARNING: Scrape providers can break or violate site terms. Use at your own risk.
+
+# Where fetched lyrics are cached (widget reads from here)
+LYRICS_CACHE_DIR="$HOME/.cache/conky/lyrics"
+
+# Optional staging area for organizing/exporting later (v1 doesn’t auto-move into your library)
+LYRICS_EXPORT_DIR="$HOME/.cache/conky/lyrics_export"
+
+# Local lyrics directories (comma-separated). Example: "$HOME/Music/lyrics,$HOME/Documents/Lyrics"
+LYRICS_LOCAL_DIRS="$HOME/Music/lyrics"
+
+# Enable/disable stages
+LYRICS_ENABLE_LOCAL=1
+LYRICS_ENABLE_ONLINE=1
+LYRICS_ENABLE_CACHE=1
+
+# Provider lists (comma-separated, order = preference)
+# “NOAPI” = generally no user keys required (default “just works” set)
+LYRICS_PROVIDERS_NOAPI="lyrics_ovh,lololyrics,lrclib,chartlyrics"
+
+# “SCRAPE” = HTML scraping / quirky providers (optional, may break)
+#LYRICS_PROVIDERS_SCRAPE="azlyrics,songlyrics,elyrics,letras,lyricfind,musixmatch"
+
+# “API” = requires user key/token (opt-in)
+LYRICS_PROVIDERS_API="genius"
+GENIUS_TOKEN=""

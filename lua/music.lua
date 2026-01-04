@@ -461,7 +461,7 @@ function conky_music_draw()
   do
     -- Only draw idle bars if:
     -- 1) Widget is allowed to show while inactive (hide_when_inactive == false)
-    -- 2) Player is NOT Playing or Paused
+    -- 2) Player is NOT Playing or Paused (unless animate_idle == true)
     local hide_cfg = THEME and THEME.music and THEME.music.hide_when_inactive
     if hide_cfg == false then
       local st = ""
@@ -469,10 +469,11 @@ function conky_music_draw()
       if f then
         st = f:read("*l") or ""; f:close()
       end
-      if not (st == "Playing" or st == "Paused") then
-        -- Theme toggle to enable/disable the idle animation
-        local anim_flag = tget(THEME, "music.bars.animate_idle")
-        if anim_flag ~= false then
+      -- Theme toggle to enable/disable the idle animation
+      local anim_flag = tget(THEME, "music.bars.animate_idle")
+      if anim_flag ~= false then
+        local playing = (st == "Playing" or st == "Paused")
+        if (not playing) or (anim_flag == true) then
           -- Geometry: span exactly between arc endpoints (same as your arc)
           local sx          = cx + r * math.cos(deg2rad(ARC_START))
           local ex          = cx + r * math.cos(deg2rad(ARC_END))

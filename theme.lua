@@ -325,6 +325,56 @@ return {
     },
   },
 
+  ----------------------------------------------------------------
+  -- Lyrics panel layout and styles
+  ----------------------------------------------------------------
+  lyrics = {
+    enabled                  = true,
+    hide_when_inactive       = true,
+    idle_hide_after_s        = 10,
+    inactive_message         = "Lyrics can make the song, don't you think?",
+    offline_message          = "Offline",
+    not_found_message        = "Lyrics not found",
+    instrumental_message     = "Instrumental",
+
+    -- Optional typography cleanup (useful for pasted lyrics with extra blank lines)
+    normalize_blank_lines    = true,
+    max_blank_run            = 1, -- 1 = at most one empty line in a row; 0 = no blank lines
+    -- When normalizing blank lines:
+    -- true  = treat lines that are only spaces/tabs as blank (current behavior)
+    -- false = preserve whitespace-only lines (e.g., "  " lines)
+    whitespace_only_is_blank = true,
+
+    -- Display-only cleanup for timed .lrc files
+    strip_lrc_timestamps     = true,
+
+    x                        = 40,
+    y                        = 300,
+    w                        = 360,
+    h                        = 840,
+
+    padding                  = { left = 10, top = 10, right = 10, bottom = 10 },
+
+    header                   = {
+      enabled = true,
+      format  = "{artist} — {title}",
+      pt      = 18,
+      color   = "FFFFFF",
+      bold    = true,
+    },
+
+    body                     = {
+      pt      = 14,
+      color   = "FFFFFF",
+      line_px = 16,
+    },
+
+    more_marker              = "…more…",
+
+    show_saved_path          = true,
+    saved_prefix             = "Saved to: ",
+  },
+
 
 
   ----------------------------------------------------------------

@@ -53,6 +53,25 @@ Note: The Conky widget fetch does not execute PHP on pfSense. If you see crash-r
 
 Note: `scripts/pf-fetch-basic.sh` uses `sudo -n sqlite3` on the Pi-hole host. Configure sudoers accordingly if needed.
 
+## SSH Safety & Mitigation
+
+The widget polls pfSense via SSH and includes a circuit-breaker to prevent sshguard lockouts.
+If repeated SSH failures occur, polling is intentionally paused for a short cooldown.
+During this time, the UI displays: SSH PAUSED - <reason> - <Ns>.
+
+While paused:
+- pfSense is still considered ONLINE.
+- Traffic arcs drop to zero to indicate polling is paused.
+
+After the cooldown, polling resumes automatically.
+
+Common reasons and what they mean:
+- AUTH: SSH authentication failed or credentials are not accepted.
+- PF_SSH_FAIL: pfSense SSH failed from the fetch script.
+- PF_LUA_SSH_FAIL: pfSense SSH failed from the Lua metadata fetch.
+
+Manual recovery: run `scripts/pf-ssh-gate.sh reset` to clear the pause.
+
 ## Configuration
 
 ### Widget entry
