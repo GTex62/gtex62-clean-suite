@@ -3,12 +3,13 @@ set -euo pipefail
 # Usage: station_latlon.sh ICAO
 # Prints: "<lat> <lon>" in decimal degrees, or nothing on failure.
 
+SUITE_DIR="${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}"
 ICAO="$(echo "${1:-KMEM}" | tr '[:lower:]' '[:upper:]')"
 
 # Grab the first line from decoded METAR (has DMS coords), e.g.:
 # "MEMPHIS INTERNATIONAL AIRPORT , TN, United States (KMEM) 35-02N 089-59W 86M"
 line="$(
-  ~/.config/conky/gtex62-clean-suite/scripts/metar.sh "$ICAO" 2>/dev/null \
+  "$SUITE_DIR/scripts/metar.sh" "$ICAO" 2>/dev/null \
     | sed -n '1p'
 )"
 

@@ -1,11 +1,11 @@
 --[[
-  ~/.config/conky/gtex62-clean-suite/lua/owm.lua
+  ${CONKY_SUITE_DIR:-~/.config/conky/gtex62-clean-suite}/lua/owm.lua
   Unified OpenWeather + horizon arc + planets + aviation weather
 
   Overview
   --------
   This module is the "weather brain" for the Conky suite. It handles:
-    • Loading layout + style from ~/.config/conky/gtex62-clean-suite/theme.lua (THEME.weather.*)
+    • Loading layout + style from ${CONKY_THEME_PATH:-${CONKY_SUITE_DIR:-~/.config/conky/gtex62-clean-suite}/theme.lua} (THEME.weather.*)
     • Reading OpenWeather current + forecast JSON caches via jq
     • Drawing a horizon arc with:
         - East / South|North / West labels
@@ -19,7 +19,7 @@
   External files / scripts
   ------------------------
     • Theme config:
-        ~/.config/conky/gtex62-clean-suite/theme.lua
+        ${CONKY_THEME_PATH:-${CONKY_SUITE_DIR:-~/.config/conky/gtex62-clean-suite}/theme.lua}
           - THEME.weather.icon.*
           - THEME.weather.arc.*
           - THEME.weather.planets.*
@@ -27,16 +27,16 @@
           - THEME.weather.sun_time_labels.*
           - THEME.weather.metar.*, .taf.*, .advisories.*
     • OpenWeather caches (JSON, created by your fetch script):
-        ~/.cache/conky/owm_current.json
-        ~/.cache/conky/owm_daily.json      -- or theme/weather overrides
+        ${CONKY_CACHE_DIR:-${XDG_CACHE_HOME:-~/.cache}/conky}/owm_current.json
+        ${CONKY_CACHE_DIR:-${XDG_CACHE_HOME:-~/.cache}/conky}/owm_daily.json      -- or theme/weather overrides
     • Sky variables (planet positions, etc):
-        ~/.cache/conky/sky.vars
+        ${CONKY_CACHE_DIR:-${XDG_CACHE_HOME:-~/.cache}/conky}/sky.vars
     • Helper scripts:
-        ~/.config/conky/gtex62-clean-suite/scripts/moon_times.sh
-        ~/.config/conky/gtex62-clean-suite/scripts/owm_fc_5rows.sh
-        ~/.config/conky/gtex62-clean-suite/scripts/metar_ob.sh
-        ~/.config/conky/gtex62-clean-suite/scripts/taf_wrap.sh
-        ~/.config/conky/gtex62-clean-suite/scripts/airsig_filter.sh
+        ${CONKY_SUITE_DIR:-~/.config/conky/gtex62-clean-suite}/scripts/moon_times.sh
+        ${CONKY_SUITE_DIR:-~/.config/conky/gtex62-clean-suite}/scripts/owm_fc_5rows.sh
+        ${CONKY_SUITE_DIR:-~/.config/conky/gtex62-clean-suite}/scripts/metar_ob.sh
+        ${CONKY_SUITE_DIR:-~/.config/conky/gtex62-clean-suite}/scripts/taf_wrap.sh
+        ${CONKY_SUITE_DIR:-~/.config/conky/gtex62-clean-suite}/scripts/airsig_filter.sh
 
   Conky calls (lua_parse)
   -----------------------
@@ -75,9 +75,12 @@
 
 -- Load theme.lua once (prefer local THEME, fallback to global `theme`)
 local HOME = os.getenv("HOME") or ""
+local SUITE_DIR = os.getenv("CONKY_SUITE_DIR") or (HOME .. "/.config/conky/gtex62-clean-suite")
+local XDG_CACHE_HOME = os.getenv("XDG_CACHE_HOME") or (HOME .. "/.cache")
+local CACHE_DIR = os.getenv("CONKY_CACHE_DIR") or (XDG_CACHE_HOME .. "/conky")
+local THEME_PATH = os.getenv("CONKY_THEME_PATH") or (SUITE_DIR .. "/theme.lua")
 local THEME = (function()
-  local path = HOME .. "/.config/conky/gtex62-clean-suite/theme.lua"
-  local ok, t = pcall(dofile, path)
+  local ok, t = pcall(dofile, THEME_PATH)
   if ok and type(t) == "table" then return t end
   if type(theme) == "table" then return theme end -- some themes set global
   return {}
@@ -94,13 +97,16 @@ local function tget(root, dotted)
   return node
 end
 
+-- Debug toggle: draw a small cross at the arc center (off by default)
+local DEBUG_CENTER_CROSS = (tget(THEME, "weather.debug_center_cross") == true)
+
 ---------------------------------------------------
 -- Read config values (theme first, then owm.vars)
 ---------------------------------------------------
 -- Optional overrides from ~/.config/conky/owm.vars
 -- Only used for cache paths; all layout comes from theme.lua.
 
-local VARS_FILE = HOME .. "/.config/conky/gtex62-clean-suite/widgets/owm.vars"
+local VARS_FILE = SUITE_DIR .. "/widgets/owm.vars"
 
 local function read_vars_raw(name)
   local f = io.open(VARS_FILE, "r")
@@ -122,7 +128,7 @@ local function get_cache_path()
   local raw = read_vars_raw("OWM_CACHE")
   if raw and raw ~= "" then return raw end
   -- default
-  return HOME .. "/.cache/conky/owm_current.json"
+  return CACHE_DIR .. "/owm_current.json"
 end
 
 -- Daily / One Call cache path (for 5-day forecast tiles)
@@ -136,7 +142,7 @@ local function get_daily_cache_path()
   if raw and raw ~= "" then return raw end
 
   -- 3) default fallback
-  return HOME .. "/.cache/conky/owm_daily.json"
+  return CACHE_DIR .. "/owm_daily.json"
 end
 
 
@@ -227,16 +233,21 @@ end
 
 -- =====================================================================
 -- 2. Horizon arc geometry
---    - arc is "locked" to the main icon position (from theme.weather.icon)
+--    - arc center uses theme.weather.center
 --    - helpers for angle normalization and visible span check
 -- =====================================================================
 
 -- Compute arc center (cx,cy) from icon geometry + theme.weather.arc.*
 local function get_arc_geometry()
-  local ix, iy, iw = icon_geom()
-  local dx, dy, r, sdeg, edeg = arc_geom()
-  local cx = ix + (iw / 2) + dx
-  local cy = iy + (iw / 2) + dy
+  -- local ix, iy, iw = icon_geom()
+  -- local dx, dy, r, sdeg, edeg = arc_geom()
+  local r = tonumber(tget(THEME, "weather.arc.r")) or 170
+  local sdeg = tonumber(tget(THEME, "weather.arc.start")) or 180
+  local edeg = tonumber(tget(THEME, "weather.arc.end")) or 0
+  -- local cx = ix + (iw / 2) + dx
+  -- local cy = iy + (iw / 2) + dy
+  local cx = THEME.weather.center.x
+  local cy = THEME.weather.center.y
   return cx, cy, r, sdeg, edeg
 end
 
@@ -332,6 +343,19 @@ function conky_owm_draw_horizon()
   cairo_new_path(cr) -- NEW: start with a clean path
 
   local cx, cy, r, ARC_START, ARC_END = get_arc_geometry()
+  if DEBUG_CENTER_CROSS then
+    cairo_set_source_rgba(cr, 1, 0, 0, 1)
+    cairo_set_line_width(cr, 2)
+    cairo_move_to(cr, cx - 10, cy); cairo_line_to(cr, cx + 10, cy); cairo_stroke(cr)
+    cairo_move_to(cr, cx, cy - 10); cairo_line_to(cr, cx, cy + 10); cairo_stroke(cr)
+  end
+  local function hex_to_rgba(hex, a)
+    hex = (hex or "A0A0A0"):gsub("#", "")
+    local r_ = tonumber(hex:sub(1, 2), 16) / 255
+    local g_ = tonumber(hex:sub(3, 4), 16) / 255
+    local b_ = tonumber(hex:sub(5, 6), 16) / 255
+    return r_, g_, b_, (a == nil and 1 or a)
+  end
 
   -- Draw arc with day/night color from theme.lua
   cairo_save(cr)
@@ -369,6 +393,44 @@ function conky_owm_draw_horizon()
   cairo_stroke(cr)
   cairo_new_path(cr)
   cairo_restore(cr)
+
+  -- Weather hline + vline (theme-driven)
+  do
+    local H = (THEME.weather.hline or {})
+    local len = tonumber(H.length) or 320
+    local lw  = tonumber(H.width) or 1
+    local dy  = tonumber(H.dy) or 0
+    local col = H.color or "A0A0A0"
+    local y   = cy + dy
+    local x1  = cx - (len / 2)
+    local x2  = cx + (len / 2)
+    local r_, g_, b_, a_ = hex_to_rgba(col, 1.0)
+
+    cairo_set_source_rgba(cr, r_, g_, b_, a_)
+    cairo_set_line_width(cr, lw)
+    cairo_move_to(cr, x1, y)
+    cairo_line_to(cr, x2, y)
+    cairo_stroke(cr)
+  end
+
+  do
+    local V = (THEME.weather.vline or {})
+    local len = tonumber(V.length) or 60
+    local lw  = tonumber(V.width) or 2
+    local dx  = tonumber(V.dx) or 0
+    local dy  = tonumber(V.dy) or 0
+    local col = V.color or "A0A0A0"
+    local x   = cx + dx
+    local y1  = cy + dy
+    local y2  = y1 + len
+    local r_, g_, b_, a_ = hex_to_rgba(col, 1.0)
+
+    cairo_set_source_rgba(cr, r_, g_, b_, a_)
+    cairo_set_line_width(cr, lw)
+    cairo_move_to(cr, x, y1)
+    cairo_line_to(cr, x, y2)
+    cairo_stroke(cr)
+  end
 
 
 
@@ -568,7 +630,7 @@ function conky_owm_draw_horizon()
     -- read moonrise/set via your script each tick (fast, tiny output)
     local function get_moon_times()
       local home = os.getenv("HOME") or ""
-      local cmd  = string.format("%s/.config/conky/gtex62-clean-suite/scripts/moon_times.sh", home)
+      local cmd  = string.format("%s/scripts/moon_times.sh", SUITE_DIR)
       local p    = io.popen(cmd, "r"); if not p then return nil, nil end
       local rise_ts, set_ts
       for line in p:lines() do
@@ -620,11 +682,11 @@ function conky_owm_draw_horizon()
 
   -- 4.5 Planet markers (Venus, Mars, Jupiter, Saturn, Mercury)
 
-  -- Planet helpers (read radii and angles from ~/.cache/conky/sky.vars)
+  -- Planet helpers (read radii and angles from CACHE_DIR/sky.vars)
   -- Read order: PREFIX_THETA (deg) > PREFIX_AZ (deg, horizon-filtered)
 
   local function read_size(key, default_r)
-    local f = io.open(HOME .. "/.cache/conky/sky.vars", "r"); if not f then return default_r end
+    local f = io.open(CACHE_DIR .. "/sky.vars", "r"); if not f then return default_r end
     local s = f:read("*a") or ""; f:close()
     local v = s:match("^%s*" .. key .. "%s*=%s*([%-0-9%.]+)")
     return v and tonumber(v) or default_r
@@ -632,7 +694,7 @@ function conky_owm_draw_horizon()
 
   -- Return nil if the key is not present (so AZ can take over)
   local function read_theta(key, def)
-    local f = io.open(HOME .. "/.cache/conky/sky.vars", "r"); if not f then return def end
+    local f = io.open(CACHE_DIR .. "/sky.vars", "r"); if not f then return def end
     local s = f:read("*a") or ""; f:close()
     local m = s:match("^%s*" .. key .. "%s*=%s*([%-0-9%.]+)")
     return m and tonumber(m) or nil
@@ -640,7 +702,7 @@ function conky_owm_draw_horizon()
 
   -- Read a numeric key from sky.vars with "last occurrence wins"
   local function read_key_num(key)
-    local f = io.open(HOME .. "/.cache/conky/sky.vars", "r"); if not f then return nil end
+    local f = io.open(CACHE_DIR .. "/sky.vars", "r"); if not f then return nil end
     local val = nil
     for line in f:lines() do
       local v = line:match("^%s*" .. key .. "%s*=%s*([%-0-9%.]+)%s*$")
@@ -770,7 +832,7 @@ local function read_forecast_5()
       return get_daily_cache_path()
     end
     local HOME = os.getenv("HOME") or ""
-    return HOME .. "/.cache/conky/owm_forecast.json"
+    return CACHE_DIR .. "/owm_forecast.json"
   end
 
   -- helper: coerce icon to day variant (…d)
@@ -783,7 +845,7 @@ local function read_forecast_5()
   -- 0) Prefer helper script output (idx, dt, hi, lo, code)
   do
     local HOME   = os.getenv("HOME") or ""
-    local script = HOME .. "/.config/conky/gtex62-clean-suite/scripts/owm_fc_5rows.sh"
+    local script = SUITE_DIR .. "/scripts/owm_fc_5rows.sh"
     local json   = fc_path()
     local f      = io.open(script, "r")
     if f then
@@ -927,6 +989,44 @@ local function read_forecast_5()
   return result
 end
 
+local FC_DAYS_VARS = CACHE_DIR .. "/owm_days.vars"
+local FC_PURGED = false
+local function read_forecast_vars()
+  if not FC_PURGED then
+    os.remove(CACHE_DIR .. "/owm_forecast.json")
+    os.remove(CACHE_DIR .. "/owm_fc_reduce.json")
+    os.remove(CACHE_DIR .. "/owm_fc_5rows.json")
+    FC_PURGED = true
+  end
+
+  local result = {}
+  local f = io.open(FC_DAYS_VARS, "r")
+  if not f then return result end
+  local vars = {}
+  for line in f:lines() do
+    local k, v = line:match("^([A-Z0-9_]+)=(.*)$")
+    if k and v then vars[k] = v end
+  end
+  f:close()
+
+  for i = 0, 5 do
+    local name = vars["D" .. i .. "_NAME"] or ""
+    local hi = tonumber(vars["D" .. i .. "_HI"] or "")
+    local lo = tonumber(vars["D" .. i .. "_LO"] or "")
+    local icon = vars["D" .. i .. "_ICON"] or ""
+    if name ~= "" or hi or lo or icon ~= "" then
+      result[#result + 1] = {
+        date_str = name,
+        hi = hi or 0,
+        lo = lo or 0,
+        icon = icon,
+      }
+    end
+  end
+
+  return result
+end
+
 
 
 
@@ -988,14 +1088,20 @@ function conky_owm_draw_forecast_placeholder()
   end
 
   local cfg    = tget_or("weather.forecast", nil) or tget_or("forecast", nil) or {}
+  local fdy    = tonumber(tget(THEME, "weather.forecast.dy")) or 0
+  local F      = (THEME.weather and THEME.weather.forecast) or {}
   local origin = cfg.origin or { x = 165, y = 260 }
-  local tiles  = cfg.tiles or 5
-  local gap    = cfg.gap or 34
+  local tiles  = tonumber(F.tiles) or cfg.tiles or 6
+  local max_tiles = 6
+  if tiles > max_tiles then tiles = max_tiles end
+  if tiles < 1 then tiles = 1 end
   local tile   = cfg.tile or { w = 64, h = 110 }
+  local tile_w = tonumber(F.tile_w) or tile.w or 64
+  local gap    = tonumber(F.gap) or cfg.gap or 34
   local alpha  = (cfg.alpha ~= nil) and cfg.alpha or 1.0
 
   local date   = cfg.date or { pt = 11, dy = 0, color = { 0.85, 0.85, 0.85, 1.0 } }
-  local icon   = cfg.icon or { size = 44, dy = 20, dir = os.getenv("HOME") .. "/.cache/conky/icons" }
+  local icon   = cfg.icon or { size = 44, dy = 20, dir = CACHE_DIR .. "/icons" }
   local temps  = cfg.temps or { pt = 12, dy = 74, color_hi = { 1, 1, 1, 1 }, color_lo = { 0.7, 0.7, 0.7, 1 } }
 
   -- text helper
@@ -1011,11 +1117,21 @@ function conky_owm_draw_forecast_placeholder()
   end
 
   -- real forecast array
-  local days = read_forecast_5() -- { date_str, hi, lo, icon } x up to 5
+  local days = read_forecast_vars() -- { name, hi, lo, icon } from owm_days.vars
+
+  local ox = (origin and tonumber(origin.x)) or 0
+  local oy = (origin and tonumber(origin.y)) or 0
+  local strip_w = (tiles * tile_w) + ((tiles - 1) * gap)
+  local cx = (THEME.weather and THEME.weather.center and THEME.weather.center.x) or 0
+  if F.center == true then
+    ox = cx - (strip_w / 2)
+  end
+
+  tile.w = tile_w
 
   for i = 0, tiles - 1 do
-    local x  = origin.x + i * (tile.w + gap)
-    local y  = origin.y
+    local x  = ox + i * (tile.w + gap)
+    local y  = oy + fdy
     local cx = x + tile.w / 2
     local d  = days[i + 1]
 
@@ -1046,7 +1162,7 @@ function conky_owm_draw_forecast_placeholder()
     do
       local size = icon.size or 44
       local ic_y = y + (icon.dy or 20) + size / 2
-      local dir  = icon.dir or (os.getenv("HOME") .. "/.cache/conky/icons")
+      local dir  = icon.dir or (CACHE_DIR .. "/icons")
       local path = string.format("%s/fc%d.png", dir, i)
 
       local ok   = draw_png_centered_cairo_local(cr, path, cx, ic_y, size)
@@ -1060,8 +1176,8 @@ function conky_owm_draw_forecast_placeholder()
     end
 
     -- temps
-    local hi_txt = (d and d.hi) and string.format("%d", d.hi) or "72°"
-    local lo_txt = (d and d.lo) and string.format("%d", d.lo) or "58°"
+    local hi_txt = (d and d.hi) and string.format("%.0f", tonumber(d.hi) or 0) or "72°"
+    local lo_txt = (d and d.lo) and string.format("%.0f", tonumber(d.lo) or 0) or "58°"
     local t_y = y + (temps.dy or 74)
     draw_centered_text(cx, t_y, hi_txt, temps.pt, temps.color_hi)
     draw_centered_text(cx, t_y + temps.pt + 2, lo_txt, temps.pt, temps.color_lo)
@@ -1119,10 +1235,14 @@ function conky_owm_sun_labels()
   local now         = os.time()
   local is_night    = (sr_ts and ss_ts) and (now < sr_ts or now > ss_ts)
 
-  local left_label  = is_night and ("Sunrise " .. (sunrise ~= "" and sunrise or "--:--"))
-      or ("Sunset " .. (sunset ~= "" and sunset or "--:--"))
-  local right_label = is_night and ("Sunset " .. (sunset ~= "" and sunset or "--:--"))
-      or ("Sunrise " .. (sunrise ~= "" and sunrise or "--:--"))
+  local L = THEME.weather.sun_time_labels or {}
+  local sunrise_label = L.sunrise_text or "Sunrise"
+  local sunset_label  = L.sunset_text  or "Sunset"
+
+  local left_label  = is_night and (sunrise_label .. " " .. (sunrise ~= "" and sunrise or "--:--"))
+      or (sunset_label .. " " .. (sunset ~= "" and sunset or "--:--"))
+  local right_label = is_night and (sunset_label .. " " .. (sunset ~= "" and sunset or "--:--"))
+      or (sunrise_label .. " " .. (sunrise ~= "" and sunrise or "--:--"))
 
   -- Draw text as path+fill (no path leaks), centered on anchors
   cairo_select_font_face(cr, "DejaVu Sans Mono", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
@@ -1171,7 +1291,7 @@ function conky_metar()
 
   -- call: metar_ob.sh <STATION> <WRAP_COL>
   local cmd     = string.format("%q %q %d",
-    home .. "/.config/conky/gtex62-clean-suite/scripts/metar_ob.sh", station, w)
+    SUITE_DIR .. "/scripts/metar_ob.sh", station, w)
 
   local p       = io.popen(cmd, "r"); if not p then return "" end
   local out = p:read("*a") or ""; p:close()
@@ -1226,7 +1346,7 @@ function conky_taf()
 
   -- taf_wrap.sh: wraps & caps lines already
   local cmd = string.format("%q %d %d %q",
-    home .. "/.config/conky/gtex62-clean-suite/scripts/taf_wrap.sh", wrap, maxl, station)
+    SUITE_DIR .. "/scripts/taf_wrap.sh", wrap, maxl, station)
   local p = io.popen(cmd, "r"); if not p then return "" end
   local raw = p:read("*a") or ""; p:close()
   raw = (raw:gsub("%s+$", ""))
@@ -1286,7 +1406,7 @@ function conky_advisories()
 
   -- Get TSV rows within radius: kind\tphen\tregion\tzone\tfrom\tto
   local cmd     = string.format("%q %q %d",
-    home .. "/.config/conky/gtex62-clean-suite/scripts/airsig_filter.sh", station, radius)
+    SUITE_DIR .. "/scripts/airsig_filter.sh", station, radius)
   local p       = io.popen(cmd, "r"); if not p then return "" end
   local raw = p:read("*a") or ""; p:close()
   raw = (raw:gsub("%s+$", ""))

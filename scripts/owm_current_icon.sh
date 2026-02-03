@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
-CUR_JSON="${1:-$HOME/.cache/conky/owm_current.json}"
-THEME_DIR="${2:-$HOME/.config/conky/gtex62-clean-suite/icons/owm}"
-OUTPNG="$HOME/.cache/conky/icons/current.png"
+SUITE_DIR="${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}"
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+CACHE_DIR="${CONKY_CACHE_DIR:-$XDG_CACHE_HOME/conky}"
+CUR_JSON="${1:-$CACHE_DIR/owm_current.json}"
+THEME_DIR="${2:-$SUITE_DIR/icons/owm}"
+OUTPNG="$CACHE_DIR/icons/current.png"
 
 code="$(jq -r '.weather[0].icon // empty' "$CUR_JSON" 2>/dev/null || true)"
 # --- Daylight override based on cloud cover (when no precip) ---

@@ -1,6 +1,6 @@
----@diagnostic disable: undefined-global, cast-local-type, assign-type-mismatch, need-check-nil, param-type-mismatch
+---@diagnostic disable: undefined-global, cast-local-type, assign-type-mismatch, need-check-nil, param-type-mismatch, lowercase-global
 
--- ~/.config/conky/gtex62-clean-suite/lua/lyrics.lua
+-- ${CONKY_SUITE_DIR:-~/.config/conky/gtex62-clean-suite}/lua/lyrics.lua
 -- Lyrics panel (v1 skeleton)
 -- • Uses theme.lua for layout/colors (theme.lyrics).
 -- • Provides:
@@ -17,9 +17,12 @@ local has_cairo = pcall(require, "cairo") -- enables global cairo_* funcs in Con
 -- THEME loader (same pattern as music.lua)
 --------------------------
 local HOME = os.getenv("HOME") or ""
+local SUITE_DIR = os.getenv("CONKY_SUITE_DIR") or (HOME .. "/.config/conky/gtex62-clean-suite")
+local XDG_CACHE_HOME = os.getenv("XDG_CACHE_HOME") or (HOME .. "/.cache")
+local CACHE_DIR = os.getenv("CONKY_CACHE_DIR") or (XDG_CACHE_HOME .. "/conky")
+local THEME_PATH = os.getenv("CONKY_THEME_PATH") or (SUITE_DIR .. "/theme.lua")
 local THEME = (function()
-  local path = HOME .. "/.config/conky/gtex62-clean-suite/theme.lua"
-  local ok, t = pcall(dofile, path)
+  local ok, t = pcall(dofile, THEME_PATH)
   if ok and type(t) == "table" then return t end
   if type(theme) == "table" then return theme end
   return {}
@@ -101,7 +104,7 @@ local function url_encode(s)
 end
 
 local function load_lyrics_vars()
-  local path = HOME .. "/.config/conky/gtex62-clean-suite/widgets/lyrics.vars"
+  local path = SUITE_DIR .. "/widgets/lyrics.vars"
   local f = io.open(path, "r")
   if not f then return {} end
   local vars = {}
@@ -150,7 +153,7 @@ local function get_cache_dir()
     dir = dir:gsub("^%$HOME", HOME):gsub("^~", HOME)
     return dir
   end
-  return HOME .. "/.cache/conky/lyrics"
+  return CACHE_DIR .. "/lyrics"
 end
 
 local function get_noapi_providers()

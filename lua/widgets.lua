@@ -10,7 +10,10 @@
 -- - Tight numeric formatting (no ugly left padding)
 -- NOTE: Avoid passing string.gsub(...) directly to tonumber/return; capture first value.
 
-local theme = dofile(os.getenv("HOME") .. "/.config/conky/gtex62-clean-suite/theme.lua")
+local HOME = os.getenv("HOME") or ""
+local SUITE_DIR = os.getenv("CONKY_SUITE_DIR") or (HOME .. "/.config/conky/gtex62-clean-suite")
+local THEME_PATH = os.getenv("CONKY_THEME_PATH") or (SUITE_DIR .. "/theme.lua")
+local theme = dofile(THEME_PATH)
 
 -- normalize hex colors: accept 'RRGGBB' or '#RRGGBB'
 local function norm_hex(c, fallback)

@@ -46,7 +46,7 @@ while keeping everything text-first, elegant, and unobtrusive.
 ## Screenshots
 
 ### Full Suite
-![Clean Conky Suite](screenshots/gtex62-clean-suite.png)
+![Clean Conky Suite](screenshots/gtex62-clean-suite2.png)
 
 ### Weather + Horizon Arc
 ![Time and Weather](screenshots/time-and-weather.png)
@@ -135,7 +135,8 @@ These wallpapers are licensed for **personal, non-commercial use**.
 
 -   Track title/artist/album with marquee scrolling\
 -   Arc progress + time labels\
--   Album art (cached cover)
+-   HR baseline line drawn in Lua (tweak with `theme.music.baseline.dy`)\
+-   Album art (cached cover; anchor is `theme.music.center`, offsets in `theme.music.art`, fallback `theme.music.art_fixed`)
 
 ### Network & Infrastructure Widgets
 
@@ -191,10 +192,10 @@ The `theme.lua` file controls: - Font family\
 
 ## Folder Structure
 
-Installed under your home config:
+Installed under your home config (or `${CONKY_SUITE_DIR:-~/.config/conky/gtex62-clean-suite}` if overridden):
 
 ```text
-~/.config/conky/gtex62-clean-suite/
+${CONKY_SUITE_DIR:-~/.config/conky/gtex62-clean-suite}/
 ├── theme.lua
 ├── theme-pf.lua
 ├── widgets/
@@ -258,6 +259,26 @@ git clone https://github.com/GTex62/gtex62-clean-suite.git
 
 ---
 
+### Optional: Override suite/cache paths
+
+By default the suite uses:
+
+- Suite: `${CONKY_SUITE_DIR:-~/.config/conky/gtex62-clean-suite}`
+- Cache: `${XDG_CACHE_HOME:-~/.cache}/conky`
+
+You can override these before launching Conky:
+
+```bash
+export CONKY_SUITE_DIR="$HOME/.config/conky/gtex62-clean-suite"
+export CONKY_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/conky"
+export CONKY_THEME_PATH="$CONKY_SUITE_DIR/theme.lua"
+export CONKY_THEME_PF_PATH="$CONKY_SUITE_DIR/theme-pf.lua"
+```
+
+If you source `scripts/conky-env.sh`, you can also set these there.
+
+---
+
 ### 3. Configure OpenWeather variables
 
 There are two files involved:
@@ -268,7 +289,7 @@ There are two files involved:
 Start from the provided examples:
 
 ```bash
-cd ~/.config/conky/gtex62-clean-suite/widgets/
+cd "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/widgets/"
 cp owm.env.example  owm.env
 cp owm.vars.example owm.vars
 ```
@@ -287,9 +308,8 @@ In `owm.env`:
 
 In `owm.vars`:
 
-- Change `YOURUSERNAME` in  
-  `OWM_DAILY_CACHE=/home/YOURUSERNAME/.cache/conky/owm_forecast.json`  
-  to your actual Linux username (or full path).  
+- Set `OWM_DAILY_CACHE` to match your cache directory (or full path):  
+  `OWM_DAILY_CACHE="${CONKY_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/conky}/owm_forecast.json"`  
 - Optionally adjust LAT/LON/UNITS/LANG to match your location.
 
 ---
@@ -298,8 +318,9 @@ In `owm.vars`:
 
 The suite includes a helper script to start all widgets at once:
 ```bash
-~/.config/conky/gtex62-clean-suite/scripts/start-conky.sh &
+${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/scripts/start-conky.sh &
 ```
+If you set `CONKY_SUITE_DIR`, use `$CONKY_SUITE_DIR/scripts/start-conky.sh` instead.
 
 ### Optional: Toggle a single widget with a launcher script
 
@@ -308,8 +329,8 @@ You can create a personal launcher in `~/.local/bin` (e.g., `apwbe`) that source
 Conky using `widgets/ap-wbe530.conky.conf`. This launcher is intentionally not included in the repo because it’s
 user-specific.
 ```bash
-CFG=~/.config/conky/gtex62-clean-suite/widgets/ap-wbe530.conky.conf
-source ~/.config/conky/gtex62-clean-suite/scripts/conky-env.sh
+CFG="${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/widgets/ap-wbe530.conky.conf"
+source "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/scripts/conky-env.sh"
 if pgrep -f "conky .*${CFG}" >/dev/null; then
   pkill -f "conky .*${CFG}"
 else
@@ -317,18 +338,18 @@ else
 fi
 ```
 
-You can also start individual widgets manually if you prefer:
+You can also start individual widgets manually if you prefer (use `$CONKY_SUITE_DIR` if set):
 ``` bash
-conky -c ~/.config/conky/gtex62-clean-suite/widgets/sys-info.conky.conf &
-conky -c ~/.config/conky/gtex62-clean-suite/widgets/weather.conky.conf &
-conky -c ~/.config/conky/gtex62-clean-suite/widgets/calendar.conky.conf &
-conky -c ~/.config/conky/gtex62-clean-suite/widgets/date-time.conky.conf &
-conky -c ~/.config/conky/gtex62-clean-suite/widgets/notes.conky.conf &
-conky -c ~/.config/conky/gtex62-clean-suite/widgets/music.conky.conf &
-conky -c ~/.config/conky/gtex62-clean-suite/widgets/music-lyrics.conky.conf &
-conky -c ~/.config/conky/gtex62-clean-suite/widgets/net-sys.conky.conf &
-conky -c ~/.config/conky/gtex62-clean-suite/widgets/ap-wbe530.conky.conf &
-conky -c ~/.config/conky/gtex62-clean-suite/widgets/pfsense.conky.conf &
+conky -c "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/widgets/sys-info.conky.conf" &
+conky -c "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/widgets/weather.conky.conf" &
+conky -c "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/widgets/calendar.conky.conf" &
+conky -c "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/widgets/date-time.conky.conf" &
+conky -c "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/widgets/notes.conky.conf" &
+conky -c "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/widgets/music.conky.conf" &
+conky -c "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/widgets/music-lyrics.conky.conf" &
+conky -c "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/widgets/net-sys.conky.conf" &
+conky -c "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/widgets/ap-wbe530.conky.conf" &
+conky -c "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/widgets/pfsense.conky.conf" &
 ```
 Add the script to your desktop environment’s startup applications to launch the suite automatically on login.
 
@@ -351,7 +372,7 @@ If widgets appear off-screen or stacked incorrectly:
 4. Save and reload that widget:
    ```bash
    pkill conky
-   ~/.config/conky/gtex62-clean-suite/scripts/start-conky.sh &
+   ${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/scripts/start-conky.sh &
    ```
 
 Tip: You can experiment interactively by changing the numbers in small steps (e.g., ±50 px).
@@ -363,7 +384,7 @@ Tip: You can experiment interactively by changing the numbers in small steps (e.
 Most of the visual behavior is controlled from:
 
 ```text
-~/.config/conky/gtex62-clean-suite/theme.lua
+${CONKY_THEME_PATH:-~/.config/conky/gtex62-clean-suite/theme.lua}
 ```
 
 Things you can change there:
@@ -375,7 +396,7 @@ Things you can change there:
 - Spacing for separators and sections
 - Calendar spacing and padding
 - Weather arc and planet styling options (if you enable planets)
-- Music widget arc/bars, volume marker, and album art placement (theme.music, especially theme.music.art_fixed)
+- Music widget arc/bars, volume marker, and album art placement (theme.music.art, with theme.music.art_fixed as fallback)
 
 Each `.conky.conf` file uses the same shared theme, so adjusting `theme.lua` lets you redesign the look of the entire suite without editing each widget individually.
 
@@ -389,7 +410,7 @@ The weather widget can optionally display the **Moon and visible planets**
 These positions are generated externally and cached in:
 
 ```text
-~/.cache/conky/sky.vars
+${CONKY_CACHE_DIR:-${XDG_CACHE_HOME:-~/.cache}/conky}/sky.vars
 ```
 
 #### Dependency
@@ -416,12 +437,12 @@ This script:
 
 - Calculates current azimuth / altitude for the Moon and planets
 - Converts positions to horizon-arc angles
-- Writes values into `~/.cache/conky/sky.vars` for `owm.lua` to consume
+- Writes values into `${CONKY_CACHE_DIR:-${XDG_CACHE_HOME:-~/.cache}/conky}/sky.vars` for `owm.lua` to consume
 
 You can test it manually:
 
 ```bash
-~/.config/conky/gtex62-clean-suite/scripts/sky_update.py
+${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/scripts/sky_update.py
 ```
 
 #### Automatic updates (recommended)

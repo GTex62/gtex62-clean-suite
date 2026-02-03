@@ -1,10 +1,11 @@
 --[[
-  ~/.config/conky/gtex62-clean-suite/theme-pf.lua
+  ${CONKY_THEME_PF_PATH:-${CONKY_SUITE_DIR:-~/.config/conky/gtex62-clean-suite}/theme-pf.lua}
   pfSense widget theme configuration
 
   This table is read by lua/pf_widget.lua via:
-      local T = dofile(os.getenv("HOME") ..
-        "/.config/conky/gtex62-clean-suite/theme-pf.lua")
+      local T = dofile(os.getenv("CONKY_THEME_PF_PATH") or
+        (os.getenv("CONKY_SUITE_DIR") or (os.getenv("HOME") or "") ..
+        "/.config/conky/gtex62-clean-suite") .. "/theme-pf.lua")
 
   It provides:
     • Typography and base colors specific to the pfSense widget

@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-state_dir="${HOME}/.cache/conky/pfsense"
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+CACHE_DIR="${CONKY_CACHE_DIR:-$XDG_CACHE_HOME/conky}"
+state_dir="${CACHE_DIR}/pfsense"
 lock_file="${state_dir}/ssh.lock"
 state_file="${state_dir}/ssh_state"
 

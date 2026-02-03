@@ -2,19 +2,50 @@
 
 -- Read placement from theme.lua
 local HOME     = os.getenv("HOME") or ""
-local THEME    = dofile(HOME .. "/.config/conky/gtex62-clean-suite/theme.lua")
+local SUITE_DIR = os.getenv("CONKY_SUITE_DIR") or (HOME .. "/.config/conky/gtex62-clean-suite")
+local XDG_CACHE_HOME = os.getenv("XDG_CACHE_HOME") or (HOME .. "/.cache")
+local CACHE_DIR = os.getenv("CONKY_CACHE_DIR") or (XDG_CACHE_HOME .. "/conky")
+local THEME_PATH = os.getenv("CONKY_THEME_PATH") or (SUITE_DIR .. "/theme.lua")
+local THEME    = dofile(THEME_PATH)
+local ART      = (THEME.music and THEME.music.art) or nil
 local FIXED    = (THEME.music and THEME.music.art_fixed) or {}
 
--- Fallback to your proven values if theme is missing
-local X        = tonumber(FIXED.x) or 252
-local Y        = tonumber(FIXED.y) or 160
-local W        = tonumber(FIXED.w) or 62
-local H        = tonumber(FIXED.h) or 60
+local function tget(root, dotted)
+  local node = root
+  for key in string.gmatch(dotted or "", "[^%.]+") do
+    if type(node) ~= "table" then return nil end
+    node = node[key]
+  end
+  return node
+end
+
+local function get_arc_anchor()
+  local cx = tonumber(tget(THEME, "music.center.x")) or 0
+  local cy = tonumber(tget(THEME, "music.center.y")) or 0
+  return cx, cy
+end
+
+local X, Y, W, H
+if ART and ART.dx ~= nil and ART.dy ~= nil and ART.w ~= nil and ART.h ~= nil then
+  local cx, cy = get_arc_anchor()
+  local dx = tonumber(ART.dx)
+  local dy = tonumber(ART.dy)
+  W = tonumber(ART.w)
+  H = tonumber(ART.h)
+  X = math.floor(cx + dx - (W / 2))
+  Y = math.floor(cy + dy - (H / 2))
+else
+  -- Fallback to your proven values if theme is missing
+  X = tonumber(FIXED.x) or 252
+  Y = tonumber(FIXED.y) or 160
+  W = tonumber(FIXED.w) or 62
+  H = tonumber(FIXED.h) or 60
+end
 
 -- Cache + fallback art
-local CACHE    = HOME .. "/.cache/conky/nowplaying_cover.png"
-local FALLBACK = HOME .. "/.config/conky/gtex62-clean-suite/icons/horn-of-odin.png"
-local TMPDIR   = HOME .. "/.cache/conky/cover_dyn"
+local CACHE    = CACHE_DIR .. "/nowplaying_cover.png"
+local FALLBACK = SUITE_DIR .. "/icons/horn-of-odin.png"
+local TMPDIR   = CACHE_DIR .. "/cover_dyn"
 
 local function file_exists(p)
   local f = io.open(p, "rb"); if f then

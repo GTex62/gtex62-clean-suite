@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
-DAILY="${1:-$HOME/.cache/conky/owm_forecast.json}"
-THEME_DIR="${2:-$HOME/.config/conky/gtex62-clean-suite/icons/owm}"
-OUTDIR="$HOME/.cache/conky/icons"
+SUITE_DIR="${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}"
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+CACHE_DIR="${CONKY_CACHE_DIR:-$XDG_CACHE_HOME/conky}"
+DAILY="${1:-$CACHE_DIR/owm_forecast.json}"
+THEME_DIR="${2:-$SUITE_DIR/icons/owm}"
+OUTDIR="$CACHE_DIR/icons"
 mkdir -p "$OUTDIR" "$THEME_DIR"
 
 ensure_code_png() {
@@ -14,7 +17,7 @@ ensure_code_png() {
 codes="$(jq -r '
   .list
   | group_by(.dt | strftime("%Y-%m-%d"))
-  | .[:5]
+  | .[:6]
   | map(
       ( [ .[] | {icon:.weather[0].icon, hour:(.dt | strftime("%H") | tonumber)} ] ) as $arr
       | ( [ $arr[] | select(.hour >= 10 and .hour <= 16) | .icon ] ) as $day
@@ -35,12 +38,12 @@ while read -r code; do
   dest="$OUTDIR/fc${i}.png"
   [[ -s "$src" ]] && cp -f "$src" "$dest"
   i=$((i+1))
-  [[ $i -ge 5 ]] && break
+  [[ $i -ge 6 ]] && break
 done <<< "$codes"
 
 # --- Daylight override for fc0: if it's daytime, mirror the current icon ---
-CUR_JSON="$HOME/.cache/conky/owm_current.json"
-ICON_DIR="$HOME/.cache/conky/icons"
+CUR_JSON="$CACHE_DIR/owm_current.json"
+ICON_DIR="$CACHE_DIR/icons"
 
 if [ -f "$CUR_JSON" ]; then
   now=$(date +%s)

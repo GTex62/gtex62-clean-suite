@@ -2,10 +2,10 @@
 # WARNING: Scrape providers can break or violate site terms. Use at your own risk.
 
 # Where fetched lyrics are cached (widget reads from here)
-LYRICS_CACHE_DIR="$HOME/.cache/conky/lyrics"
+LYRICS_CACHE_DIR="${CONKY_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/conky}/lyrics"
 
 # Optional staging area for organizing/exporting later (v1 doesn’t auto-move into your library)
-LYRICS_EXPORT_DIR="$HOME/.cache/conky/lyrics_export"
+LYRICS_EXPORT_DIR="${CONKY_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/conky}/lyrics_export"
 
 # Local lyrics directories (comma-separated). Example: "$HOME/Music/lyrics,$HOME/Documents/Lyrics"
 LYRICS_LOCAL_DIRS="$HOME/Music/lyrics"

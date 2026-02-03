@@ -3,7 +3,10 @@ import math, os, subprocess, sys
 import ephem
 
 HOME = os.path.expanduser("~")
-OUT  = os.path.join(HOME, ".cache", "conky", "sky.vars")
+SUITE_DIR = os.environ.get("CONKY_SUITE_DIR") or os.path.join(HOME, ".config", "conky", "gtex62-clean-suite")
+XDG_CACHE_HOME = os.environ.get("XDG_CACHE_HOME") or os.path.join(HOME, ".cache")
+CACHE_DIR = os.environ.get("CONKY_CACHE_DIR") or os.path.join(XDG_CACHE_HOME, "conky")
+OUT  = os.path.join(CACHE_DIR, "sky.vars")
 
 def run_station_latlon():
     """
@@ -13,7 +16,7 @@ def run_station_latlon():
       "LAT=32.9 LON=-96.8"
       "32.9,-96.8"
     """
-    sh = os.path.join(HOME, ".config", "conky", "gtex62-clean-suite", "scripts", "station_latlon.sh")
+    sh = os.path.join(SUITE_DIR, "scripts", "station_latlon.sh")
     if not (os.path.exists(sh) and os.access(sh, os.X_OK)):
         return None
 

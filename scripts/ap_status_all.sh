@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SUITE_DIR="${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}"
 AP_IPS_CSV="${AP_IPS:-192.168.1.2,192.168.1.3,192.168.1.4}"
 IFS="," read -r -a AP_IPS <<< "$AP_IPS_CSV"
 AP_LBL=( "Closet"       "Office"       "Great Room" )
@@ -10,7 +11,7 @@ for idx in "${!AP_IPS[@]}"; do
   label="${AP_LBL[$idx]}"
 
   out="$(
-    ~/.config/conky/gtex62-clean-suite/scripts/zyxel_cmd.sh "$ip" $'show version\nshow cpu status\nexit' \
+    "$SUITE_DIR/scripts/zyxel_cmd.sh" "$ip" $'show version\nshow cpu status\nexit' \
       | tr -d '\r'
   )"
 

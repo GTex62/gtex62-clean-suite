@@ -1,8 +1,9 @@
--- ~/.config/conky/gtex62-clean-suite/lua/pf_reader.lua
+-- ${CONKY_SUITE_DIR:-~/.config/conky/gtex62-clean-suite}/lua/pf_reader.lua
 -- Minimal reader: runs pf-fetch-basic.sh, parses sections, prints a short summary.
 
 local HOME = os.getenv("HOME") or ""
-local FETCH = HOME .. "/.config/conky/gtex62-clean-suite/scripts/pf-fetch-basic.sh"
+local SUITE_DIR = os.getenv("CONKY_SUITE_DIR") or (HOME .. "/.config/conky/gtex62-clean-suite")
+local FETCH = SUITE_DIR .. "/scripts/pf-fetch-basic.sh"
 
 local function sh(cmd)
   local f = io.popen(cmd .. " 2>/dev/null")

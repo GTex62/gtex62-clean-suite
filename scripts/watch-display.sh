@@ -4,7 +4,8 @@
 # CONFIG
 QUIET_SECONDS=6                # how long the layout must be unchanged
 CHECK_INTERVAL=0.5             # how often to check (seconds)
-START_CONKY="$HOME/.config/conky/gtex62-clean-suite/scripts/start-conky.sh"
+SUITE_DIR="${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}"
+START_CONKY="$SUITE_DIR/scripts/start-conky.sh"
 
 last_hash=""
 last_change_time=0

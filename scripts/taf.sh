@@ -6,7 +6,10 @@ set -euo pipefail
 # and trims anything after the first "=" separator.
 
 STATION="$(echo "${1:-${STATION:-KMEM}}" | tr '[:lower:]' '[:upper:]')"
-RAW="/tmp/taf_${STATION}_raw.txt"
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+CACHE_DIR="${CONKY_CACHE_DIR:-$XDG_CACHE_HOME/conky}"
+mkdir -p "$CACHE_DIR"
+RAW="$CACHE_DIR/taf_${STATION}_raw.txt"
 AGE_LIMIT=1800  # 30 minutes
 URL="https://tgftp.nws.noaa.gov/data/forecasts/taf/stations/${STATION}.TXT"
 
@@ -17,7 +20,7 @@ if [ -f "$RAW" ] && [ -s "$RAW" ] && [ $(( $(date +%s) - $(stat -c %Y "$RAW") ))
 fi
 
 if [ $need_fetch -eq 1 ]; then
-  tmp="$(mktemp)"
+  tmp="$(mktemp "${CACHE_DIR}/taf_${STATION}.tmp.XXXXXX")"
   if curl -fsS "$URL" -o "$tmp"; then
     mv "$tmp" "$RAW"
   else

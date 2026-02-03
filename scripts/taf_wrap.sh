@@ -2,6 +2,7 @@
 set -euo pipefail
 
 # Usage: taf_wrap.sh [WRAP_COL] [MAX_LINES] [STATION]
+SUITE_DIR="${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}"
 WRAP_COL="${1:-40}"
 MAX_LINES="${2:-4}"
 STATION="$(echo "${3:-${STATION:-KMEM}}" | tr '[:lower:]' '[:upper:]')"
@@ -9,7 +10,7 @@ STATION="$(echo "${3:-${STATION:-KMEM}}" | tr '[:lower:]' '[:upper:]')"
 # Try the AWC API which preserves logical breaks; fall back to taf.sh
 raw="$(curl -fsS "https://aviationweather.gov/api/data/taf?ids=${STATION}&hours=0&sep=true" 2>/dev/null || true)"
 # if [ -z "${raw}" ]; then
-#   raw="$(~/.config/conky/gtex62-clean-suite/scripts/taf.sh "$STATION" 2>/dev/null || true)"
+#   raw="$("$SUITE_DIR/scripts/taf.sh" "$STATION" 2>/dev/null || true)"
 # fi
 [ -n "${raw:-}" ] || exit 0
 

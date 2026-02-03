@@ -4,7 +4,10 @@ set -euo pipefail
 # - Treat zero-byte cache as stale
 # - Only replace cache if payload looks valid
 
-CACHE="/tmp/airsigmets.json"
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+CACHE_DIR="${CONKY_CACHE_DIR:-$XDG_CACHE_HOME/conky}"
+CACHE="$CACHE_DIR/airsigmets.json"
+mkdir -p "$CACHE_DIR"
 AGE_LIMIT=300   # seconds
 
 # Consider cache stale if missing, too old, or zero bytes
@@ -59,6 +62,4 @@ if jq -c --slurp '
 ' "$AIR" "$SIG" > "$MERGED"; then
   mv "$MERGED" "$CACHE"
 fi
-
-
 

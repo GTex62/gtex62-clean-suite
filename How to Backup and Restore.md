@@ -12,7 +12,7 @@ This guide explains how to use the `backup-restore-conky.sh` script to back up a
   `conky_<HOST>_<YYYYmmdd-HHMM>.tar.gz`
 - **Prefers** to save the archive in `/mnt/NAS_Data/Data/Linux/backups` **if present and writable**, otherwise falls back to your home directory.
 - **Includes**:
-  - `.config/conky/gtex62-clean-suite/` (all `.conky.conf`, `.lua`, `scripts/`, `.vscode/`, etc.)
+  - `${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/` (all `.conky.conf`, `.lua`, `scripts/`, `.vscode/`, etc.)
   - `~/.config/autostart/start-conky.desktop`
 - **Excludes** common cache/log content (`*.log`, `.cache/*`).
 - **Restores** files back into the original locations under your home folder.
@@ -25,11 +25,11 @@ This guide explains how to use the `backup-restore-conky.sh` script to back up a
 
 The guide assumes you have this script saved as:
 ```
-~/.config/conky/gtex62-clean-suite/scripts/backup-restore-conky.sh
+${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/scripts/backup-restore-conky.sh
 ```
 and made executable:
 ```bash
-chmod +x ~/.config/conky/gtex62-clean-suite/scripts/backup-restore-conky.sh
+chmod +x "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/scripts/backup-restore-conky.sh"
 ```
 
 > If your script lives elsewhere, just adjust the paths below.
@@ -39,7 +39,7 @@ chmod +x ~/.config/conky/gtex62-clean-suite/scripts/backup-restore-conky.sh
 ## Prerequisites
 
 - `tar` must be available (it is on most distros). The script checks for it.
-- Ensure your Conky suite is in `~/.config/conky/gtex62-clean-suite/` (or update `SRC` if different).
+- Ensure your Conky suite is in `${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}` (or update `SRC` if different).
 - If you want to use a NAS destination, make sure it’s mounted and **writable**.
 
 ---
@@ -48,7 +48,7 @@ chmod +x ~/.config/conky/gtex62-clean-suite/scripts/backup-restore-conky.sh
 
 ### Backup
 ```bash
-~/.config/conky/gtex62-clean-suite/scripts/backup-restore-conky.sh backup
+"${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/scripts/backup-restore-conky.sh" backup
 ```
 - The script prints:
   - the **source** directory it’s backing up
@@ -65,12 +65,12 @@ tar -tzf /path/to/conky_<HOST>_<STAMP>.tar.gz | head
 
 ### Restore
 ```bash
-~/.config/conky/gtex62-clean-suite/scripts/backup-restore-conky.sh restore /path/to/conky_<HOST>_<STAMP>.tar.gz
+"${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/scripts/backup-restore-conky.sh" restore /path/to/conky_<HOST>_<STAMP>.tar.gz
 ```
 What happens:
-1. If `~/.config/conky/gtex62-clean-suite/` exists, it’s copied to `~/.config/conky.safe.<STAMP>`.
+1. If `${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}` exists, it’s copied to `~/.config/conky.safe.<STAMP>`.
 2. The archive is extracted **into your home folder**, restoring to:
-   - `~/.config/conky/gtex62-clean-suite/`
+   - `${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}`
    - `~/.config/autostart/start-conky.desktop`
 3. Execute bits are re-applied to `*.sh` under the suite root and `scripts/`.
 
@@ -91,7 +91,7 @@ Below are the critical variables inside the script and how to safely modify them
 
 **Current:**
 ```bash
-SRC="$HOME/.config/conky/gtex62-clean-suite"
+SRC="${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}"
 ```
 
 **Change it if:**
@@ -147,7 +147,7 @@ The backup command includes this file explicitly:
 tar -czf "$DEST" \
   ... \
   -C "$HOME" \
-  ".config/conky/gtex62-clean-suite/" \
+  "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/" \
   ".config/autostart/start-conky.desktop"
 ```
 
@@ -187,7 +187,7 @@ The script already excludes logs and caches:
 **Add more includes** by appending relative paths after `-C "$HOME"`:
 ```bash
 -C "$HOME" \
-".config/conky/gtex62-clean-suite/" \
+"${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/" \
 ".config/autostart/start-conky.desktop" \
 "Documents/Conky-Notes/" \
 ```
@@ -201,7 +201,7 @@ The script already excludes logs and caches:
 - **“Conky source not found”**  
   Check that `SRC` points to a real folder:  
   ```bash
-  ls -la "$HOME/.config/conky/gtex62-clean-suite"
+  ls -la "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}"
   ```
 
 - **Missing `tar`** (rare)  
@@ -220,15 +220,15 @@ The script already excludes logs and caches:
 - **Permissions after restore**  
   The script re-applies execute bits to `*.sh`. If you add new script locations, set them manually:
   ```bash
-  chmod +x ~/.config/conky/gtex62-clean-suite/*.sh
-  chmod +x ~/.config/conky/gtex62-clean-suite/scripts/*.sh
+  chmod +x "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}"/*.sh
+  chmod +x "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}"/scripts/*.sh
   ```
 
 - **Dry-run (what would be archived?)**  
   You can simulate the file list with:
   ```bash
   tar -czf - --exclude='*.log' --exclude='.cache' --exclude='*/.cache/*' -C "$HOME" \
-    ".config/conky/gtex62-clean-suite/" ".config/autostart/start-conky.desktop" \
+    "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/" ".config/autostart/start-conky.desktop" \
   | tar -tzf - | less
   ```
 
@@ -267,7 +267,7 @@ During restore, the script saves a safety copy of your current suite into:
 ```
 If something looks wrong after you restore, you can **roll back** by copying files from that safety folder back into:
 ```
-~/.config/conky/gtex62-clean-suite/
+${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}
 ```
 
 ---
@@ -282,7 +282,7 @@ If something looks wrong after you restore, you can **roll back** by copying fil
 # Usage:
 #   backup-restore-conky.sh backup
 #   backup-restore-conky.sh restore <file>
-#   $HOME/.config/conky/gtex62-clean-suite/scripts/backup-restore-conky.sh backup
+#   ${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/scripts/backup-restore-conky.sh backup
 #
 # Behavior:
 # - Backup prefers DEST dir /mnt/NAS_Data/Data/Linux/backups if it exists & is writable.
@@ -292,7 +292,7 @@ If something looks wrong after you restore, you can **roll back** by copying fil
 set -euo pipefail
 IFS=$'\n\t'
 
-SRC="$HOME/.config/conky/gtex62-clean-suite"
+SRC="${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}"
 HOST="$(hostname -s || echo host)"
 STAMP="$(date +%Y%m%d-%H%M)"
 
@@ -322,7 +322,7 @@ backup() {
     --exclude='*/.cache/*' \
     --warning=no-file-changed \
     -C "$HOME" \
-    ".config/conky/gtex62-clean-suite/" \
+    "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/" \
     ".config/autostart/start-conky.desktop" 2>/dev/null || true
 
   echo "Backup created: $DEST"

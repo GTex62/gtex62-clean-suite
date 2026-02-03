@@ -4,16 +4,19 @@ set -euo pipefail
 # Prints TSV rows for advisories within RADIUS_NM of STATION:
 # kind  phen  region  zone  validFrom  validTo
 
+SUITE_DIR="${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}"
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+CACHE_DIR="${CONKY_CACHE_DIR:-$XDG_CACHE_HOME/conky}"
 STATION="$(echo "${1:-KMEM}" | tr '[:lower:]' '[:upper:]')"
 RADIUS_NM="${2:-300}"
 
 # Station lat/lon (decimal degrees)
-read LAT LON <<<"$(~/.config/conky/gtex62-clean-suite/scripts/station_latlon.sh "$STATION" 2>/dev/null || echo "")"
+read LAT LON <<<"$("$SUITE_DIR/scripts/station_latlon.sh" "$STATION" 2>/dev/null || echo "")"
 [ -n "${LAT:-}" ] && [ -n "${LON:-}" ] || exit 0
 
 # Ensure we have a fresh-ish cache
-~/.config/conky/gtex62-clean-suite/scripts/airsig_fetch.sh >/dev/null 2>&1 || true
-CACHE="/tmp/airsigmets.json"
+"$SUITE_DIR/scripts/airsig_fetch.sh" >/dev/null 2>&1 || true
+CACHE="$CACHE_DIR/airsigmets.json"
 [ -s "$CACHE" ] || exit 0
 
 # Extract scalar fields only; compute centroid (lat,lon) as two separate scalars

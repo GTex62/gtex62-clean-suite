@@ -97,7 +97,7 @@ Manual recovery: run `scripts/pf-ssh-gate.sh reset` to clear the pause.
 Start Conky with:
 
 ```
-conky -c ~/.config/conky/gtex62-clean-suite/widgets/pfsense.conky.conf
+conky -c "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/widgets/pfsense.conky.conf"
 ```
 
 ## Installation
@@ -148,13 +148,13 @@ pi ALL=(root) NOPASSWD: /usr/bin/sqlite3
 2) Verify `scripts/pf-fetch-basic.sh` runs without prompts:
    
    ```
-   ~/.config/conky/gtex62-clean-suite/scripts/pf-fetch-basic.sh full | head -n 20
+   "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/scripts/pf-fetch-basic.sh" full | head -n 20
    ```
 
 3) Start the widget:
    
    ```
-   conky -c ~/.config/conky/gtex62-clean-suite/widgets/pfsense.conky.conf
+   conky -c "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/widgets/pfsense.conky.conf"
    ```
 
 Optional:

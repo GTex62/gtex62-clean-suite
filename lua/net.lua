@@ -1,7 +1,10 @@
 ---@diagnostic disable: lowercase-global
--- ~/.config/conky/gtex62-clean-suite/scripts/net.lua
+-- ${CONKY_SUITE_DIR:-~/.config/conky/gtex62-clean-suite}/scripts/net.lua
 
-local iface_path = os.getenv("HOME") .. "/.cache/conky/iface"
+local HOME = os.getenv("HOME") or ""
+local XDG_CACHE_HOME = os.getenv("XDG_CACHE_HOME") or (HOME .. "/.cache")
+local CACHE_DIR = os.getenv("CONKY_CACHE_DIR") or (XDG_CACHE_HOME .. "/conky")
+local iface_path = CACHE_DIR .. "/iface"
 
 local function read_iface()
   local f = io.open(iface_path, "r")

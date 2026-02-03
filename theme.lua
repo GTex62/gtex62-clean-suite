@@ -1,9 +1,11 @@
 --[[
-  ~/.config/conky/theme.lua
+  ${CONKY_THEME_PATH:-${CONKY_SUITE_DIR:-~/.config/conky/gtex62-clean-suite}/theme.lua}
   Centralized Conky theme configuration
 
   This table is required by all Conky widgets via:
-      local theme = dofile(os.getenv("HOME") .. "/.config/conky/theme.lua")
+      local theme = dofile(os.getenv("CONKY_THEME_PATH") or
+        (os.getenv("CONKY_SUITE_DIR") or (os.getenv("HOME") or "") ..
+        "/.config/conky/gtex62-clean-suite") .. "/theme.lua")
 
   It provides:
     • Typography and base colors
@@ -77,7 +79,7 @@ return {
   -- Placement / tiling (used by calendar.lua for multi-month layouts)
   cal_origin_x      = 0,
   cal_origin_y      = 0,
-  cal_gap_x         = 5200, -- horizontal gap between month blocks
+  cal_gap_x         = 5205, -- horizontal gap between month blocks
   cal_gap_y         = 30,   -- vertical gap between month blocks
 
   ----------------------------------------------------------------
@@ -112,7 +114,7 @@ return {
   horizon_labels    = {
     pt    = 12,
     color = { 1, 1, 1, 1 }, -- RGBA
-    dy    = 18,             -- vertical offset below the arc
+    dy    = 24,             -- vertical offset below the arc
     lx    = 0,              -- fine x offset for "West"
     cx    = 0,              -- fine x offset for "South"/"North"
     rx    = 0,              -- fine x offset for "East"
@@ -122,6 +124,7 @@ return {
   -- Weather / horizon layout (used by lua/owm.lua)
   ----------------------------------------------------------------
   weather           = {
+    center          = { x = 400, y = 204 },
     -- Weather icon anchor and size.
     -- x,y controls icon and the nearby text group (city, temp, humidity).
     icon            = { x = 200, y = 74, w = 80 },
@@ -132,25 +135,42 @@ return {
     -- Angles are degrees in screen coordinates; direction follows owm.lua.
     arc             = { dx = 160, dy = 90, r = 170, start = 180, ["end"] = 0 },
 
+    hline           = {
+      length = 460,
+      width  = 0.5,
+      color  = "A0A0A0",
+      dy     = 58, -- relative to weather.center.y
+    },
+
+    vline           = {
+      length = 100,
+      width  = 0.5,
+      color  = "A0A0A0",
+      dx     = 0,   -- relative to weather.center.x
+      dy     = -80, -- y start offset relative to weather.center.y
+    },
+
     -- Arc stroke colors (RGBA, 0.0–1.0 range)
     day_color       = { 0.65, 0.65, 0.65, 1.0 },  -- gray for day
     night_color     = { 0.14, 0.14, 0.14, 1.00 }, -- gray14 for night
 
     -- Sunrise / sunset time labels at arc ends
     sun_time_labels = {
-      pt        = 14,
-      color     = { 0.63, 0.63, 0.63, 1.0 },
-      dy        = 34, -- vertical offset below the arc (defaults in code to horizon_labels.dy + 14)
-      lx_offset = 0,  -- fine left x tweak
-      rx_offset = 0,  -- fine right x tweak
+      pt           = 14,
+      color        = { 0.63, 0.63, 0.63, 1.0 },
+      dy           = 44, -- vertical offset below the arc (defaults in code to horizon_labels.dy + 14)
+      lx_offset    = 0,  -- fine left x tweak
+      rx_offset    = 0,  -- fine right x tweak
+      sunrise_text = "SR",
+      sunset_text  = "SS",
     },
 
     -- METAR block (aviation weather)
     metar           = {
       enabled   = true,   -- turn METAR on/off
       station   = "KMEM", -- default ICAO
-      wrap_col  = 40,
-      pad_cols  = 16,
+      wrap_col  = 43,
+      pad_cols  = 15,
       max_lines = 5, -- limit METAR to this many lines (ellipsis on last if truncated)
     },
 
@@ -159,7 +179,7 @@ return {
       enabled     = true,   -- turn TAF on/off
       station     = "KMEM", -- ICAO (can be different than METAR)
       wrap_col    = 60,
-      pad_cols    = 16,
+      pad_cols    = 15,
       max_lines   = 4,
       indent_cols = 5, -- extra spaces for every line after the first
     },
@@ -169,18 +189,21 @@ return {
       enabled   = false,  -- turn SIGMET/AIRMET on/off
       station   = "KMEM", -- center point (used by airsig_filter.sh)
       radius_nm = 300,    -- search radius in nautical miles
-      wrap_col  = 60,     -- line width for wrapping
+      wrap_col  = 42,     -- line width for wrapping
       pad_cols  = 16,     -- indent to match METAR/TAF
-      max_lines = 5,      -- cap lines shown (ellipsis on last if truncated)
+      max_lines = 3,      -- cap lines shown (ellipsis on last if truncated)
     },
 
-    -- 5-day forecast layout (tile strip under the main widget)
+    -- 6-day forecast layout (tile strip under the main widget)
     forecast        = {
-      origin = { x = 180, y = 265 }, -- top-left of the strip (under main widget)
-      tiles  = 5,                    -- number of days to show (today..today+4)
-      gap    = 30,                   -- horizontal gap between tiles
+      dy     = 5,                   -- +down, -up
+      origin = { x = 0, y = 265 },  -- top-left of the strip (under main widget)
+      center = true,                -- enable centering around weather.center.x
+      tiles  = 6,                   -- number of days to show (today..today+5) 6 days max
+      tile_w = 64,                  -- width per tile (px)
+      gap    = 16,                  -- horizontal gap between tiles
 
-      tile   = { w = 64, h = 110 },  -- tile footprint for layout
+      tile   = { w = 64, h = 110 }, -- tile footprint for layout
 
       -- Date label near top of each tile
       date   = {
@@ -209,8 +232,12 @@ return {
 
     -- Optional: OpenWeather cache path override (normally set in owm.lua)
     -- cache   = {
-    --   owm_current = (os.getenv("HOME") or "") .. "/.cache/conky/owm_current.json",
-    --   owm_daily   = (os.getenv("HOME") or "") .. "/.cache/conky/owm_daily.json",
+    --   owm_current = (os.getenv("CONKY_CACHE_DIR")
+    --     or ((os.getenv("XDG_CACHE_HOME") or (os.getenv("HOME") or "") .. "/.cache") .. "/conky"))
+    --     .. "/owm_current.json",
+    --   owm_daily   = (os.getenv("CONKY_CACHE_DIR")
+    --     or ((os.getenv("XDG_CACHE_HOME") or (os.getenv("HOME") or "") .. "/.cache") .. "/conky"))
+    --     .. "/owm_daily.json",
     -- },
   },
 
@@ -224,10 +251,15 @@ return {
     idle_hide_after_s  = 10,    -- your existing timeout
     inactive_message   = "Play music, feel better",
 
+    center             = {
+      x = 282,
+      y = 185,
+    },
+
     bars               = {
       animate_idle = false, -- set to false to disable the animation
-      count = 24,
-      width = 12,
+      count = 48,
+      width = 6,
       max_height = 68,
       lift_px = 48,
       color = "FFD54A",
@@ -261,7 +293,9 @@ return {
 
     },
     baseline           = {
-      weight = 2
+      weight = 0.5,
+      dy     = -45, -- vertical offset from arc anchor to the HR line
+      length = 460, -- HR line length (pixels)
     },
     marker             = {
       diameter = 20,
@@ -271,20 +305,27 @@ return {
       color     = "A0A0A0",
       pt        = 18,
       dy        = -18, -- how far below endpoints (positive goes down)
-      lx_offset = -10,
-      rx_offset = -10,
+      lx_offset = 0,
+      rx_offset = 0,
     },
 
     ----------------------------------------------------------------
-    -- Album art placement (source of truth)
-    -- We no longer use the arc-based placement or ${lua_parse music_cover}.
-    -- The cover image is injected by: ${execp lua .../lua/cover_line.lua}
-    -- which reads THESE fixed coordinates/sizes.
-    -- If you want to move/resize the art, change these values.
+    -- Album art placement
+    -- Primary: anchor-based placement relative to the music widget’s canonical center:
+    --   anchor = theme.music.center.{x,y}
+    --   art.dx / art.dy are offsets from that anchor to the ART CENTER
+    --   cover_line.lua computes top-left as: (anchor + dx/dy) - (w/2,h/2)
     --
-    -- Why fixed? Because your proven-good values live here, and they match
-    -- what you were using in music.conky.conf (-p 252,160 -s 62x60).
+    -- Fallback: art_fixed (absolute coordinates) is kept for legacy safety.
+    -- If art (dx/dy/w/h) is present, art_fixed is ignored.
     ----------------------------------------------------------------
+    art                = {
+      dx = 0,  -- x offset from arc anchor to art center
+      dy = 6,  -- y offset from arc anchor to art center
+      w  = 62, -- width  (pixels)
+      h  = 60, -- height (pixels)
+    },
+    -- Legacy fallback (absolute screen coordinates)
     art_fixed          = {
       x = 252, -- left position (pixels)
       y = 160, -- top position (pixels)

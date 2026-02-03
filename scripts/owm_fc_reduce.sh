@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CACHE_DIR="$HOME/.cache/conky"
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+CACHE_DIR="${CONKY_CACHE_DIR:-$XDG_CACHE_HOME/conky}"
 ICON_DIR="$CACHE_DIR/icons"
 FC_JSON="$CACHE_DIR/owm_forecast.json"
 OUT_VARS="$CACHE_DIR/owm_days.vars"
@@ -25,11 +26,17 @@ jq -r '
       name: (.[0].local_dt | localtime | strftime("%a")),
       hi:   (max_by(.main.temp).main.temp),
       lo:   (min_by(.main.temp).main.temp),
-      icon: (if length == 0 then "" else
-               ( min_by( ( .hour - 12 ) | if . < 0 then - . else . end ).weather[0].icon )
-             end)
+      icon: (
+        ( [ .[] | {icon:.weather[0].icon, hour:(.dt + $tz | localtime | strftime("%H") | tonumber)} ] ) as $arr
+        | ( [ $arr[] | select(.hour >= 10 and .hour <= 16) | .icon ] ) as $day
+        | ( if ($day|length) > 0
+            then ($day | group_by(.) | max_by(length)[0])
+            else ($arr[0].icon)
+          end )
+        | sub("n$";"d")
+      )
     })
-  | .[:5]
+  | .[:6]
   | to_entries[]
   | "D\(.key)_NAME=\(.value.name)\nD\(.key)_HI=\(.value.hi|tostring)\nD\(.key)_LO=\(.value.lo|tostring)\nD\(.key)_ICON=\(.value.icon)"
 ' "$FC_JSON" > "$OUT_VARS".tmp 2>>"$LOG_FILE" || {
@@ -39,8 +46,8 @@ jq -r '
 
 mv -f "$OUT_VARS".tmp "$OUT_VARS"
 
-# Cache icons to static filenames (fc0..fc4)
-for i in 0 1 2 3 4; do
+# Cache icons to static filenames (fc0..fc5)
+for i in 0 1 2 3 4 5; do
   code="$(grep -E "^D${i}_ICON=" "$OUT_VARS" | cut -d= -f2-)"
   [[ -n "$code" ]] || continue
   dst="$ICON_DIR/fc${i}.png"

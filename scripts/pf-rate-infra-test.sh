@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-THEME="$HOME/.config/conky/gtex62-clean-suite/theme-pf.lua"
-HOST=$(lua -e 'local T=dofile(os.getenv("HOME").."/.config/conky/gtex62-clean-suite/theme-pf.lua"); print(T.host)')
-IFACE=$(lua -e 'local T=dofile(os.getenv("HOME").."/.config/conky/gtex62-clean-suite/theme-pf.lua"); print(T.ifaces.INFRA)')
-LMbps=$(lua -e 'local T=dofile(os.getenv("HOME").."/.config/conky/gtex62-clean-suite/theme-pf.lua"); print(T.link_mbps.INFRA)')
-MODE=$(lua -e 'local T=dofile(os.getenv("HOME").."/.config/conky/gtex62-clean-suite/theme-pf.lua"); print(T.scale.mode)')
-BASE=$(lua -e 'local T=dofile(os.getenv("HOME").."/.config/conky/gtex62-clean-suite/theme-pf.lua"); print(T.scale.log.base)')
-MINN=$(lua -e 'local T=dofile(os.getenv("HOME").."/.config/conky/gtex62-clean-suite/theme-pf.lua"); print(T.scale.log.min_norm)')
+SUITE_DIR="${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}"
+THEME_PF_PATH="${CONKY_THEME_PF_PATH:-$SUITE_DIR/theme-pf.lua}"
+THEME="$THEME_PF_PATH"
+HOST=$(lua -e "local T=dofile('$THEME_PF_PATH'); print(T.host)")
+IFACE=$(lua -e "local T=dofile('$THEME_PF_PATH'); print(T.ifaces.INFRA)")
+LMbps=$(lua -e "local T=dofile('$THEME_PF_PATH'); print(T.link_mbps.INFRA)")
+MODE=$(lua -e "local T=dofile('$THEME_PF_PATH'); print(T.scale.mode)")
+BASE=$(lua -e "local T=dofile('$THEME_PF_PATH'); print(T.scale.log.base)")
+MINN=$(lua -e "local T=dofile('$THEME_PF_PATH'); print(T.scale.log.min_norm)")
 
 SSH="ssh -oBatchMode=yes admin@${HOST}"
 

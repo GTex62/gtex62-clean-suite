@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-# ~/.config/conky/gtex62-clean-suite/scripts/net_extras.sh
+# ${CONKY_SUITE_DIR:-~/.config/conky/gtex62-clean-suite}/scripts/net_extras.sh
 # Helper for Conky: WAN/LAN status, VLAN gateway RTTs, default GW, DNS, subnet mask, NIC alias.
 
 set -euo pipefail
 
 # --- CONFIG ------------------------------------------------------------------
 IFACE="${2:-eno1}"                # default interface if not provided
-CACHE="$HOME/.cache/conky/wan_ip"
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+CACHE_DIR="${CONKY_CACHE_DIR:-$XDG_CACHE_HOME/conky}"
+CACHE="$CACHE_DIR/wan_ip"
 
 # Max characters for the friendly NIC alias (to fit your layout)
 MAX_ALIAS_LEN=23
@@ -136,7 +138,7 @@ wan_ip() {
 }
 
 wan_ip_label() {
-  local state_file="$HOME/.cache/conky/vpn_state"
+  local state_file="$CACHE_DIR/vpn_state"
   local raw state
 
   # Read raw VPN state (may be "On", "Off", "ON", "Off ", etc.)

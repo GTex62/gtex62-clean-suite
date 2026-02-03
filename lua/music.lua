@@ -1,10 +1,10 @@
 ---@diagnostic disable: undefined-global, cast-local-type, assign-type-mismatch, need-check-nil, param-type-mismatch
 
--- ~/.config/conky/gtex62-clean-suite/lua/music.lua
+-- ${CONKY_SUITE_DIR:-~/.config/conky/gtex62-clean-suite}/lua/music.lua
 -- Music “now-playing horizon”: exact mirror of weather arc (smile),
 -- left→right progress trail + marker, endpoint time labels (centered),
 -- artist/title with dx/dy, album art inside the arc + album name.
--- (HR line comes from your vline.png image in conky.text, not drawn here.)
+-- (HR line is drawn here in Lua for stable placement.)
 
 --------------------------
 -- Cairo availability
@@ -15,9 +15,12 @@ local has_cairo = pcall(require, "cairo") -- enables global cairo_* funcs in Con
 -- THEME loader
 --------------------------
 local HOME = os.getenv("HOME") or ""
+local SUITE_DIR = os.getenv("CONKY_SUITE_DIR") or (HOME .. "/.config/conky/gtex62-clean-suite")
+local XDG_CACHE_HOME = os.getenv("XDG_CACHE_HOME") or (HOME .. "/.cache")
+local CACHE_DIR = os.getenv("CONKY_CACHE_DIR") or (XDG_CACHE_HOME .. "/conky")
+local THEME_PATH = os.getenv("CONKY_THEME_PATH") or (SUITE_DIR .. "/theme.lua")
 local THEME = (function()
-  local path = HOME .. "/.config/conky/gtex62-clean-suite/theme.lua"
-  local ok, t = pcall(dofile, path)
+  local ok, t = pcall(dofile, THEME_PATH)
   if ok and type(t) == "table" then return t end
   if type(theme) == "table" then return theme end
   return {}
@@ -50,6 +53,16 @@ local function set_rgba_hex(cr, hex, a)
   local b = tonumber(hex:sub(5, 6), 16) or 255
   cairo_set_source_rgba(cr, r / 255, g / 255, b / 255, a or 1)
 end
+local function draw_text_centered(cr, text, cx, y, font, pt)
+  if not text or text == "" then return end
+  cairo_select_font_face(cr, font, 0, 0)
+  cairo_set_font_size(cr, pt)
+  local ext = cairo_text_extents_t:create()
+  cairo_text_extents(cr, text, ext)
+  local x = cx - (ext.width / 2 + ext.x_bearing)
+  cairo_move_to(cr, x, y)
+  cairo_show_text(cr, text)
+end
 
 -- Weather geometry (EXACTLY as your weather widget computes it)
 local function icon_geom_weather()
@@ -68,10 +81,15 @@ local function arc_geom_weather()
 end
 local function get_arc_geometry_weather()
   -- cx = icon_x + (icon_w/2) + dx ; cy = icon_y + (icon_w/2) + dy
-  local ix, iy, iw = icon_geom_weather()
-  local dx, dy, r, sdeg, edeg = arc_geom_weather()
-  local cx = ix + (iw / 2) + dx
-  local cy = iy + (iw / 2) + dy
+  -- Legacy fallback (icon-based center), kept for quick revert:
+  -- local _ix, _iy, _iw = icon_geom_weather()
+  -- local _dx, _dy, r, sdeg, edeg = arc_geom_weather()
+  -- local cx = _ix + (_iw / 2) + _dx
+  -- local cy = _iy + (_iw / 2) + _dy
+  local _ix, _iy, _iw = icon_geom_weather()
+  local _dx, _dy, r, sdeg, edeg = arc_geom_weather()
+  local cx = THEME.weather.center.x
+  local cy = THEME.weather.center.y
   return cx, cy, r, sdeg, edeg
 end
 
@@ -207,7 +225,7 @@ end
 --------------------------
 -- Cover art support (for ${lua_parse music_cover})
 --------------------------
-local COVER_CACHE = (HOME .. "/.cache/conky/nowplaying_cover.png")
+local COVER_CACHE = (CACHE_DIR .. "/nowplaying_cover.png")
 
 local function _read_cmd_simple(cmd)
   local f = io.popen(cmd); if not f then return nil end
@@ -265,6 +283,8 @@ function conky_music_draw()
   local progress_col                  = tgetd("music.arc.progress_color", tgetd("weather.sun.color", "FFFF00"))
   local line_alpha                    = 1.0
   local line_width                    = tonumber(tget(THEME, "music.baseline.weight")) or 2
+  local baseline_dy                   = tonumber(tget(THEME, "music.baseline.dy")) or -94
+  local baseline_len                  = tonumber(tget(THEME, "music.baseline.length")) or 320
 
   -- Text theming
   local char_px                       = tonumber(tget(THEME, "char_px")) or 7
@@ -272,6 +292,17 @@ function conky_music_draw()
 
   -- Metadata / timing
   local meta                          = get_player_meta()
+
+  -- HR baseline (centered on arc anchor)
+  do
+    local half_len = baseline_len / 2
+    local baseline_y = cy + baseline_dy
+    cairo_set_line_width(cr, line_width)
+    set_rgba_hex(cr, base_col, line_alpha)
+    cairo_move_to(cr, cx - half_len, baseline_y)
+    cairo_line_to(cr, cx + half_len, baseline_y)
+    cairo_stroke(cr)
+  end
 
   -- update/clear cover art based on player status
   do
@@ -427,10 +458,6 @@ function conky_music_draw()
     local dy_lbl    = tonumber(tget(THEME, "music.time_labels.dy")) or 14
     local lx_off    = tonumber(tget(THEME, "music.time_labels.lx_offset")) or 0
     local rx_off    = tonumber(tget(THEME, "music.time_labels.rx_offset")) or 0
-    local char_px   = tonumber(tget(THEME, "char_px")) or 7
-
-    cairo_select_font_face(cr, (tgetd("font", "DejaVu Sans Mono"):gsub(":size=%d+", "")), 0, 0)
-    cairo_set_font_size(cr, label_pt)
     set_rgba_hex(cr, label_col, 1.0)
 
     -- arc endpoints (in unflipped coords)
@@ -439,20 +466,12 @@ function conky_music_draw()
     local ex = cx + r * math.cos(deg2rad(ARC_END))
     local ey = cy - r * math.sin(deg2rad(ARC_END))
 
-    local function center_on_x(x, text)
-      local w = (#(text or "")) * char_px
-      return x - (w / 2)
-    end
-
     local played_str = fmt_clock_ms(pos)
     local remain_str = (len > 0) and ("-" .. fmt_clock_ms(len - pos)) or "-0:00"
 
     -- labels sit below the arc: mirror the Y to the smile side
-    cairo_move_to(cr, center_on_x(sx, played_str) + lx_off, (2 * cy - sy) + dy_lbl)
-    cairo_show_text(cr, played_str)
-
-    cairo_move_to(cr, center_on_x(ex, remain_str) + rx_off, (2 * cy - ey) + dy_lbl)
-    cairo_show_text(cr, remain_str)
+    draw_text_centered(cr, played_str, sx + lx_off, (2 * cy - sy) + dy_lbl, font_base, label_pt)
+    draw_text_centered(cr, remain_str, ex + rx_off, (2 * cy - ey) + dy_lbl, font_base, label_pt)
   end
 
   ------------------------------------------------------------
@@ -531,9 +550,17 @@ function conky_music_draw()
       local pt         = tonumber(cfg.pt) or 12
       local col        = cfg.color or "FFFFFF"
       local dy         = tonumber(cfg.dy) or 0
-      local dx         = tonumber(cfg.dx) or 0
+      local dx         = tonumber(cfg.dx)
       local field_w    = tonumber(cfg.field_w) or 320
       local field_x    = tonumber(cfg.field_x) or (cx - math.floor(field_w / 2))
+      local anchor_x   = (THEME.weather and THEME.weather.center and THEME.weather.center.x) or cx
+      local field_left
+      if dx ~= nil then
+        local field_cx = anchor_x + dx
+        field_left = field_cx - (field_w / 2)
+      else
+        field_left = field_x
+      end
 
       -- --- per-line marquee controls
       local mq         = cfg.marquee or {}
@@ -551,14 +578,15 @@ function conky_music_draw()
       set_rgba_hex(cr, col, 1.0)
       cairo_select_font_face(cr, (tgetd("font", "DejaVu Sans Mono"):gsub(":size=%d+", "")), 0, 0)
       cairo_set_font_size(cr, pt)
+      local ext = cairo_text_extents_t:create()
+      cairo_text_extents(cr, txt, ext)
 
       local y      = cy + dy
-      local x_left = field_x + dx
+      local x_left = field_left
 
       if w_est <= field_w then
         -- fits: center within field (stable)
-        local x_center = field_x + math.floor(field_w / 2)
-        local x = x_center - math.floor(w_est / 2)
+        local x = field_left + (field_w - ext.width) / 2 - ext.x_bearing
         cairo_move_to(cr, x, y)
         cairo_show_text(cr, txt)
         return
@@ -571,13 +599,14 @@ function conky_music_draw()
       local offset  = (updates * speed_px_u) % period
 
       cairo_save(cr)
-      cairo_rectangle(cr, field_x, y - (pt + 6), field_w, (pt * 2) + 12)
+      cairo_rectangle(cr, field_left, y - (pt + 6), field_w, (pt * 2) + 12)
       cairo_clip(cr)
 
       local start_x = x_left - offset
       for k = -1, 1 do
         local xk = start_x + k * period
-        cairo_move_to(cr, xk, y)
+        local x = xk + (field_w - ext.width) / 2 - ext.x_bearing
+        cairo_move_to(cr, x, y)
         cairo_show_text(cr, txt)
       end
       cairo_restore(cr)

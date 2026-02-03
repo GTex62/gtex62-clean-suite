@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SUITE="$HOME/.config/conky/gtex62-clean-suite"
-CMD="$SUITE/scripts/zyxel_cmd.sh"
-MAP="$SUITE/scripts/ap_ipmap.csv"
+SUITE_DIR="${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}"
+CMD="$SUITE_DIR/scripts/zyxel_cmd.sh"
+MAP="$SUITE_DIR/scripts/ap_ipmap.csv"
 
 # Conky color tokens (printed literally; Conky will render them)
 COLOR_RED='${color red}'

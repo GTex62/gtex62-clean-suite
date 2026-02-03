@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CACHE="$HOME/.cache/conky"
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+CACHE_DIR="${CONKY_CACHE_DIR:-$XDG_CACHE_HOME/conky}"
+CACHE="$CACHE_DIR"
 OUT="$CACHE/iface"
 mkdir -p "$CACHE"
 
@@ -24,5 +26,4 @@ fi
 printf '%s\n' "${iface}" > "$OUT"
 # No stdout (Conky won't try to print anything)
 exit 0
-
 

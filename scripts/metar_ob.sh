@@ -11,12 +11,13 @@ set -euo pipefail
 # - Extracts the raw METAR from the "ob:" line
 # - Wraps to multiple lines without splitting tokens
 
+SUITE_DIR="${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}"
 STATION="$(echo "${1:-${STATION:-KMEM}}" | tr '[:lower:]' '[:upper:]')"
 WRAP_COL="${2:-${WRAP_COL:-40}}"
 
 # Fetch decoded text and extract the raw METAR after 'ob:'
 line="$(
-  ~/.config/conky/gtex62-clean-suite/scripts/metar.sh "$STATION" \
+  "$SUITE_DIR/scripts/metar.sh" "$STATION" \
     | awk '/^ob:/{ sub(/^ob:[[:space:]]*/, ""); print; exit }'
 )"
 
@@ -40,5 +41,4 @@ printf '%s\n' "$line" | awk -v col="$WRAP_COL" '
   }
   print s
 }'
-
 

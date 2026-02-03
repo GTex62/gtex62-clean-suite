@@ -2,9 +2,15 @@
 
 -- Pixel-perfect Conky calendar using builtin Lua-Cairo.
 -- Needs: /usr/bin/conky (Lua bindings: Cairo), and theme.lua alongside.
--- Navigation: ~/.cache/conky/cal_offset.txt (set by cal_nav.sh below)
+-- Navigation: ${CONKY_CACHE_DIR:-${XDG_CACHE_HOME:-~/.cache}/conky}/cal_offset.txt (set by cal_nav.sh below)
 
 require("cairo")
+
+local HOME = os.getenv("HOME") or ""
+local SUITE_DIR = os.getenv("CONKY_SUITE_DIR") or (HOME .. "/.config/conky/gtex62-clean-suite")
+local XDG_CACHE_HOME = os.getenv("XDG_CACHE_HOME") or (HOME .. "/.cache")
+local CACHE_DIR = os.getenv("CONKY_CACHE_DIR") or (XDG_CACHE_HOME .. "/conky")
+local THEME_PATH = os.getenv("CONKY_THEME_PATH") or (SUITE_DIR .. "/theme.lua")
 
 -- ------------ helpers ------------
 local function hex_to_rgb(hex)
@@ -73,7 +79,7 @@ end
 -- ------------ main draw hook ------------
 function conky_draw_calendar()
   if conky_window == nil then return end
-  local theme          = dofile((os.getenv("HOME") or "") .. "/.config/conky/gtex62-clean-suite/theme.lua")
+  local theme          = dofile(THEME_PATH)
 
   -- Theme knobs (with defaults)
   local week_start     = (theme.week_start or "SU"):upper()
@@ -127,7 +133,7 @@ function conky_draw_calendar()
   local now            = os.date("*t")
   local offset         = 0
   do
-    local f = io.open(os.getenv("HOME") .. "/.cache/conky/cal_offset.txt", "r")
+    local f = io.open(CACHE_DIR .. "/cal_offset.txt", "r")
     if f then
       offset = tonumber(f:read("*l")) or 0; f:close()
     end

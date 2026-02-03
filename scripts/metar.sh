@@ -5,7 +5,10 @@ set -euo pipefail
 # STATION: ICAO (e.g., KMEM). If omitted, uses $STATION env or KMEM.
 
 STATION="$(echo "${1:-${STATION:-KMEM}}" | tr '[:lower:]' '[:upper:]')"
-CACHE="/tmp/metar_${STATION}_raw.txt"   # cache file (decoded feed)
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+CACHE_DIR="${CONKY_CACHE_DIR:-$XDG_CACHE_HOME/conky}"
+mkdir -p "$CACHE_DIR"
+CACHE="$CACHE_DIR/metar_${STATION}_raw.txt"   # cache file (decoded feed)
 AGE_LIMIT=600                            # seconds (10 min)
 URL="https://tgftp.nws.noaa.gov/data/observations/metar/decoded/${STATION}.TXT"
 
@@ -24,5 +27,4 @@ fi
 
 # Fallback to stale cache if fetch failed
 [ -f "$CACHE" ] && cat "$CACHE" || exit 1
-
 

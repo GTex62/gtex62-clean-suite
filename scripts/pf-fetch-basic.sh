@@ -2,8 +2,11 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+CACHE_DIR="${CONKY_CACHE_DIR:-$XDG_CACHE_HOME/conky}"
 GATE="${SCRIPT_DIR}/pf-ssh-gate.sh"
-SSH_ERR_FILE="${HOME}/.cache/conky/pfsense/ssh_last_err"
+SSH_ERR_FILE="${CACHE_DIR}/pfsense/ssh_last_err"
+mkdir -p "$(dirname "$SSH_ERR_FILE")"
 SSH="ssh -o BatchMode=yes -o ConnectTimeout=5 -o ConnectionAttempts=1 -o ServerAliveInterval=5 -o ServerAliveCountMax=1 -o LogLevel=ERROR pf"
 MODE="${1:-full}"
 PI_SSH="ssh -o BatchMode=yes -o ConnectTimeout=5 -o ConnectionAttempts=1 -o ServerAliveInterval=5 -o ServerAliveCountMax=1 -o LogLevel=ERROR pi5"
@@ -31,6 +34,14 @@ if [ "$MODE" = "full" ] || [ "$MODE" = "medium" ]; then
   # shellcheck disable=SC2016
   pf_ssh 'upt=$(uptime); \
     echo "uptime=$upt"; \
+    boot=$(sysctl -n kern.boottime 2>/dev/null | sed -E "s/.*sec[[:space:]]*=[[:space:]]*([0-9]+).*/\\1/"); \
+    case "$boot" in ""|*[!0-9]*) boot="";; esac; \
+    now=$(date +%s 2>/dev/null || printf ""); \
+    if [ -n "$boot" ] && [ -n "$now" ] && [ "$now" -ge "$boot" ] 2>/dev/null; then \
+      echo "uptime_seconds=$((now - boot))"; \
+    else \
+      echo "uptime_seconds="; \
+    fi; \
     load_part="${upt##*load averages: }"; \
     if [ "$load_part" = "$upt" ]; then load_part="${upt##*load average: }"; fi; \
     if [ "$load_part" != "$upt" ]; then \

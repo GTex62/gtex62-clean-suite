@@ -6,14 +6,17 @@ set -euo pipefail
 #   AIRMET IFR  JC Central Rockies     12:00Z–18:00Z
 #
 # Notes:
-# - Uses the merged cache at /tmp/airsigmets.json (created by airsig_fetch.sh)
+# - Uses the merged cache at $CACHE_DIR/airsigmets.json (created by airsig_fetch.sh)
 # - No distance filter yet (we'll add that later)
 
+SUITE_DIR="${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}"
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+CACHE_DIR="${CONKY_CACHE_DIR:-$XDG_CACHE_HOME/conky}"
 MAX_ITEMS="${1:-6}"
-CACHE="/tmp/airsigmets.json"
+CACHE="$CACHE_DIR/airsigmets.json"
 
 # Ensure we have a fresh-ish cache
-~/.config/conky/gtex62-clean-suite/scripts/airsig_fetch.sh >/dev/null 2>&1 || true
+"$SUITE_DIR/scripts/airsig_fetch.sh" >/dev/null 2>&1 || true
 [ -s "$CACHE" ] || exit 0
 
 jq -r '

@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CACHE="$HOME/.cache/conky"
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+CACHE_DIR="${CONKY_CACHE_DIR:-$XDG_CACHE_HOME/conky}"
+CACHE="$CACHE_DIR"
 OUT="$CACHE/wan_ip"
 STATE_FILE="$CACHE/vpn_state"
 LAST_IP_FILE="$CACHE/wan_ip_last"
@@ -120,5 +122,4 @@ main() {
 
 main
 exit 0
-
 

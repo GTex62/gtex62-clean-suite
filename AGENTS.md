@@ -5,9 +5,9 @@
 - Prefer minimal diffs. Do not refactor unless explicitly requested.
 - Before editing, briefly state what you plan to change and why.
 - Default to editing ONLY the selected text in VS Code.
-  - If nothing is selected, edit ONLY the currently open file unless I name other files.
+  - If nothing is selected, edit ONLY the currently open file(s) unless I name other files.
 - Preserve existing indentation/alignment and comment style.
-- After editing, show the exact before/after for each changed line or block.
+<!-- - After editing, show the exact before/after for each changed line or block. -->
 
 ## Safety rules
 - Never run git commit, git push, tag, release, or open PRs unless I explicitly ask.

@@ -1,4 +1,4 @@
--- ~/.config/conky/gtex62-clean-suite/lua/pf_widget.lua
+-- ${CONKY_SUITE_DIR:-~/.config/conky/gtex62-clean-suite}/lua/pf_widget.lua
 -- pfSense widget: live text + arc with moving markers, trails, labels, baseline.
 -- Theme knobs come from theme-pf.lua (hot-reloaded each refresh).
 
@@ -6,9 +6,12 @@
 -- Paths / helpers
 ---------------------------------------------------------------------------
 local HOME          = os.getenv("HOME") or ""
-local THEME_PF_PATH = HOME .. "/.config/conky/gtex62-clean-suite/theme-pf.lua"
-local FETCH_SCRIPT  = HOME .. "/.config/conky/gtex62-clean-suite/scripts/pf-fetch-basic.sh"
-local GATE_SCRIPT   = HOME .. "/.config/conky/gtex62-clean-suite/scripts/pf-ssh-gate.sh"
+local SUITE_DIR     = os.getenv("CONKY_SUITE_DIR") or (HOME .. "/.config/conky/gtex62-clean-suite")
+local XDG_CACHE_HOME = os.getenv("XDG_CACHE_HOME") or (HOME .. "/.cache")
+local CACHE_DIR     = os.getenv("CONKY_CACHE_DIR") or (XDG_CACHE_HOME .. "/conky")
+local THEME_PF_PATH = os.getenv("CONKY_THEME_PF_PATH") or (SUITE_DIR .. "/theme-pf.lua")
+local FETCH_SCRIPT  = SUITE_DIR .. "/scripts/pf-fetch-basic.sh"
+local GATE_SCRIPT   = SUITE_DIR .. "/scripts/pf-ssh-gate.sh"
 
 -- Run a shell command with /usr/bin/env bash (so pipefail etc. work)
 local function sh(cmd)
@@ -141,11 +144,11 @@ local function _pf_remote_version_and_bios()
   if ven ~= "" then bios = (ven .. (bv ~= "" and " " .. bv or "")) end
   if bd ~= "" then bios = (bios ~= "" and (bios .. " (" .. bd .. ")") or bd) end
 
-  if ver == "" then ver = nil end
-  if bios == "" then bios = nil end
+  local ver_out = (ver ~= "" and ver or nil)
+  local bios_out = (bios ~= "" and bios or nil)
 
-  _meta.version, _meta.bios, _meta.last = ver, bios, now
-  return ver, bios
+  _meta.version, _meta.bios, _meta.last = ver_out, bios_out, now
+  return ver_out, bios_out
 end
 
 
@@ -350,9 +353,11 @@ function conky_pf_draw()
     conky_window.width, conky_window.height
   )
   local cr         = cairo_create(cs)
-  if cairo_set_operator then cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR) end
+  ---@diagnostic disable-next-line: undefined-global
+  if cairo_set_operator and CAIRO_OPERATOR_CLEAR then cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR) end
   if cairo_paint then cairo_paint(cr) end
-  if cairo_set_operator then cairo_set_operator(cr, CAIRO_OPERATOR_OVER) end
+  ---@diagnostic disable-next-line: undefined-global
+  if cairo_set_operator and CAIRO_OPERATOR_OVER then cairo_set_operator(cr, CAIRO_OPERATOR_OVER) end
 
   local TP         = pf_theme()
   local fonts      = tget(TP, "fonts") or {}
@@ -1147,7 +1152,7 @@ function conky_pf_draw()
         local online   = (onlineV == "1") or (onlineV == 1) or (onlineV == true)
 
         local gate_status = _trim(sh(string.format("%q status", GATE_SCRIPT)))
-        local state_raw = sh(string.format("cat %q", HOME .. "/.cache/conky/pfsense/ssh_state"))
+        local state_raw = sh(string.format("cat %q", CACHE_DIR .. "/pfsense/ssh_state"))
         local st_tripped = tonumber(state_raw:match("tripped=(%d+)")) or 0
         local st_until = tonumber(state_raw:match("until=(%d+)")) or 0
         local st_last_ok = tonumber(state_raw:match("last_ok_ts=(%d+)")) or 0
@@ -1299,11 +1304,37 @@ function conky_pf_draw()
         local function fmt_uptime_D_HH_MM_SS(raw)
           -- Prefer a seconds field if present
           local secs = tonumber(tget(D, "system.uptime_seconds"))
-          if secs and secs >= 0 then
+          if secs and secs >= 0 and secs < 315360000 then
             local d = math.floor(secs / 86400); secs = secs % 86400
             local h = math.floor(secs / 3600); secs = secs % 3600
             local m = math.floor(secs / 60); local s = math.floor(secs % 60)
             return string.format("%d:%02d:%02d:%02d", d, h, m, s)
+          end
+          -- Parse: uptime output with leading clock time ("9:36AM  up 86 days, 36 mins, ...")
+          local s = tostring(raw)
+          local d, h, m = s:match("up%s+(%d+)%s+days?,%s*(%d+):(%d+)")
+          if d and h and m then
+            return string.format("%d:%02d:%02d:%02d", tonumber(d), tonumber(h), tonumber(m), 0)
+          end
+          d, h, m = s:match("up%s+(%d+)%s+days?,%s*(%d+)%s+hrs?,%s*(%d+)%s+mins?")
+          if d and h and m then
+            return string.format("%d:%02d:%02d:%02d", tonumber(d), tonumber(h), tonumber(m), 0)
+          end
+          d, m = s:match("up%s+(%d+)%s+days?,%s*(%d+)%s+mins?")
+          if d and m then
+            return string.format("%d:%02d:%02d:%02d", tonumber(d), 0, tonumber(m), 0)
+          end
+          h, m = s:match("up%s+(%d+):(%d+)")
+          if h and m then
+            return string.format("0:%02d:%02d:%02d", tonumber(h), tonumber(m), 0)
+          end
+          h, m = s:match("up%s+(%d+)%s+hrs?,%s*(%d+)%s+mins?")
+          if h and m then
+            return string.format("0:%02d:%02d:%02d", tonumber(h), tonumber(m), 0)
+          end
+          m = s:match("up%s+(%d+)%s+mins?")
+          if m then
+            return string.format("0:%02d:%02d:%02d", 0, tonumber(m), 0)
           end
           -- Parse: "47 days, 16:30" (no seconds given)
           local d, h, m = tostring(raw):match("(%d+)%s+days?,%s*(%d+):(%d+)")

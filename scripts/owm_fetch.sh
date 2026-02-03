@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CONF_DIR="$HOME/.config/conky/gtex62-clean-suite"
-CACHE_DIR="$HOME/.cache/conky"
+SUITE_DIR="${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}"
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+CACHE_DIR="${CONKY_CACHE_DIR:-$XDG_CACHE_HOME/conky}"
+CONF_DIR="$SUITE_DIR"
 ENV_FILE="$CONF_DIR/widgets/owm.env"
 VARS_FILE="$CONF_DIR/widgets/owm.vars"
 CACHE_JSON="$CACHE_DIR/owm_current.json"
@@ -45,31 +47,33 @@ is_cache_fresh() {
 
 URL="https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&units=${UNITS}&lang=${LANG}&appid=${OWM_API_KEY}"
 
-# If cache is fresh, skip fetch
+need_current=1
 if is_cache_fresh; then
-  exit 0
+  need_current=0
 fi
 
 fetch() { curl -fsS --max-time 6 "$URL" || return 1; }
 
-if ! fetch > "$TMP_JSON" 2>>"$LOG_FILE"; then
-  sleep 2
+if [[ $need_current -eq 1 ]]; then
   if ! fetch > "$TMP_JSON" 2>>"$LOG_FILE"; then
-    echo "$(date -Is) WARN: fetch failed; keeping old cache if present" >> "$LOG_FILE"
+    sleep 2
+    if ! fetch > "$TMP_JSON" 2>>"$LOG_FILE"; then
+      echo "$(date -Is) WARN: fetch failed; keeping old cache if present" >> "$LOG_FILE"
+      rm -f "$TMP_JSON"
+      exit 0
+    fi
+  fi
+
+  # Basic validation
+  if ! grep -q '"weather"' "$TMP_JSON"; then
+    echo "$(date -Is) WARN: response missing 'weather'; keeping old cache" >> "$LOG_FILE"
     rm -f "$TMP_JSON"
     exit 0
   fi
-fi
 
-# Basic validation
-if ! grep -q '"weather"' "$TMP_JSON"; then
-  echo "$(date -Is) WARN: response missing 'weather'; keeping old cache" >> "$LOG_FILE"
-  rm -f "$TMP_JSON"
-  exit 0
+  # Move JSON into place
+  mv -f "$TMP_JSON" "$CACHE_JSON"
 fi
-
-# Move JSON into place
-mv -f "$TMP_JSON" "$CACHE_JSON"
 
 # --- Cache the icon ---
 icon_code="$(jq -r '.weather[0].icon // empty' "$CACHE_JSON" 2>/dev/null || true)"
@@ -128,4 +132,3 @@ if [[ $need_fc -eq 1 ]]; then
 fi
 
 exit 0
-

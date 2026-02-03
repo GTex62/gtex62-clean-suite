@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -e
-J="$HOME/.cache/conky/owm_forecast.json"
+SUITE_DIR="${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}"
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+CACHE_DIR="${CONKY_CACHE_DIR:-$XDG_CACHE_HOME/conky}"
+J="$CACHE_DIR/owm_forecast.json"
 echo "Chosen codes (one per day):"
 jq -r '
   .list
@@ -17,7 +20,7 @@ jq -r '
     )
   | @tsv
 ' "$J"
-echo "---- THEME (code PNGs in ~/.config/conky/gtex62-clean-suite/icons/owm):"
-ls -l "$HOME/.config/conky/gtex62-clean-suite/icons/owm" | head -n 20 || true
-echo "---- FC files (cache in ~/.cache/conky/icons):"
-ls -l "$HOME/.cache/conky/icons"/fc*.png 2>/dev/null || echo "(no fc*.png)"
+echo "---- THEME (code PNGs in $SUITE_DIR/icons/owm):"
+ls -l "$SUITE_DIR/icons/owm" | head -n 20 || true
+echo "---- FC files (cache in $CACHE_DIR/icons):"
+ls -l "$CACHE_DIR/icons"/fc*.png 2>/dev/null || echo "(no fc*.png)"

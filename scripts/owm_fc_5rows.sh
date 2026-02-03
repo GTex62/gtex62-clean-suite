@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
-J="${1:-$HOME/.cache/conky/owm_forecast.json}"
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+CACHE_DIR="${CONKY_CACHE_DIR:-$XDG_CACHE_HOME/conky}"
+J="${1:-$CACHE_DIR/owm_forecast.json}"
 jq -r '
   .list
   | group_by(.dt | strftime("%Y-%m-%d"))
-  | .[:5]                                           # TODAY + next 4
+  | .[:6]                                           # TODAY + next 5
   | to_entries
   | .[]
   | (
