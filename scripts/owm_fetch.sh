@@ -10,7 +10,18 @@ VARS_FILE="$CONF_DIR/widgets/owm.vars"
 CACHE_JSON="$CACHE_DIR/owm_current.json"
 TMP_JSON="$CACHE_DIR/.owm_current.tmp"
 LOG_FILE="$CACHE_DIR/owm_fetch.log"
+THEME_PATH="${CONKY_THEME_PATH:-$SUITE_DIR/theme.lua}"
+
+# Optional theme knob override (theme.lua: weather.icon_cache_dir)
+theme_icon_cache_dir="$(THEME_PATH="$THEME_PATH" lua -e 'local p=os.getenv("THEME_PATH"); local ok,t=pcall(dofile,p); if ok and type(t)=="table" then local s=t.weather and t.weather.icon_cache_dir; if s and s~="" then print(s) end end' 2>/dev/null || true)"
 ICON_DIR="$CACHE_DIR/icons"
+if [[ -n "$theme_icon_cache_dir" ]]; then
+  if [[ "$theme_icon_cache_dir" = /* ]]; then
+    ICON_DIR="$theme_icon_cache_dir"
+  else
+    ICON_DIR="$CACHE_DIR/$theme_icon_cache_dir"
+  fi
+fi
 
 # Load API key + vars
 if [[ -f "$ENV_FILE" ]]; then

@@ -5,7 +5,20 @@ XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 CACHE_DIR="${CONKY_CACHE_DIR:-$XDG_CACHE_HOME/conky}"
 CUR_JSON="${1:-$CACHE_DIR/owm_current.json}"
 THEME_DIR="${2:-$SUITE_DIR/icons/owm}"
-OUTPNG="$CACHE_DIR/icons/current.png"
+THEME_PATH="${CONKY_THEME_PATH:-$SUITE_DIR/theme.lua}"
+
+# Optional theme knob override (theme.lua: weather.icon_cache_dir)
+theme_icon_cache_dir="$(THEME_PATH="$THEME_PATH" lua -e 'local p=os.getenv("THEME_PATH"); local ok,t=pcall(dofile,p); if ok and type(t)=="table" then local s=t.weather and t.weather.icon_cache_dir; if s and s~="" then print(s) end end' 2>/dev/null || true)"
+ICON_CACHE_DIR="$CACHE_DIR/icons"
+if [[ -n "$theme_icon_cache_dir" ]]; then
+  if [[ "$theme_icon_cache_dir" = /* ]]; then
+    ICON_CACHE_DIR="$theme_icon_cache_dir"
+  else
+    ICON_CACHE_DIR="$CACHE_DIR/$theme_icon_cache_dir"
+  fi
+fi
+mkdir -p "$ICON_CACHE_DIR"
+OUTPNG="$ICON_CACHE_DIR/current.png"
 
 code="$(jq -r '.weather[0].icon // empty' "$CUR_JSON" 2>/dev/null || true)"
 # --- Daylight override based on cloud cover (when no precip) ---

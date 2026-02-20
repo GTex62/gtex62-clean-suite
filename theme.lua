@@ -47,6 +47,11 @@ return {
   graph_width       = 370,
 
   ----------------------------------------------------------------
+  -- Monitor targeting (xinerama)
+  ----------------------------------------------------------------
+  monitor_head      = 0, -- 0 = primary, 1 = secondary
+
+  ----------------------------------------------------------------
   -- Notes-specific (optional widget)
   ----------------------------------------------------------------
   font_notes        = 'DejaVu Sans Mono:size=9',
@@ -77,10 +82,10 @@ return {
   cal_weekend_color = '777777', -- gray for Sat/Sun labels
 
   -- Placement / tiling (used by calendar.lua for multi-month layouts)
-  cal_origin_x      = 0,
+  cal_origin_x      = 78,
   cal_origin_y      = 0,
-  cal_gap_x         = 5205, -- horizontal gap between month blocks
-  cal_gap_y         = 30,   -- vertical gap between month blocks
+  cal_gap_x         = 0,  -- horizontal gap between month blocks
+  cal_gap_y         = 30, -- vertical gap between month blocks
 
   ----------------------------------------------------------------
   -- Rainmeter-style sys-info additions
@@ -124,10 +129,30 @@ return {
   -- Weather / horizon layout (used by lua/owm.lua)
   ----------------------------------------------------------------
   weather           = {
-    center          = { x = 400, y = 204 },
+    center          = { x = 250, y = 204 },
+    center_mode     = "auto_x",         -- "manual" or "auto_x" (auto centers X using window width)
+    center_offset   = { x = 0, y = 0 }, -- extra pixels added after centering
     -- Weather icon anchor and size.
     -- x,y controls icon and the nearby text group (city, temp, humidity).
     icon            = { x = 200, y = 74, w = 80 },
+
+    -- Main block (icon + city + temp/humidity), relative to arc center
+    -- All offsets are pixels from weather.center (arc apex).
+    main            = {
+      icon_size   = 90,                           -- main icon size (px)
+      icon_dx     = -65,                          -- icon center X offset
+      icon_dy     = -30,                          -- icon center Y offset
+      city_dx     = 0,                            -- city label X offset
+      city_dy     = -120,                         -- city label Y offset
+      city_pt     = 12,                           -- city label font size
+      temp_dx     = 15,                           -- temperature X offset
+      temp_dy     = -28,                          -- temperature Y offset
+      temp_pt     = 44,                           -- temperature font size
+      humidity_dx = 26,                           -- humidity X offset
+      humidity_dy = 0,                            -- humidity Y offset
+      humidity_pt = 20,                           -- humidity font size
+    },
+    icon_cache_dir  = "icons/gtex62-clean-suite", -- cache dir under $CONKY_CACHE_DIR (absolute path ok)
 
     -- Arc geometry is *relative* to icon center:
     --   cx = icon.x + icon.w/2 + dx
@@ -165,6 +190,11 @@ return {
       sunset_text  = "SS",
     },
 
+    -- Aviation block sizing helpers
+    aviation        = {
+      char_px = 27, -- approximate monospace char width for aviation blocks
+    },
+
     -- METAR block (aviation weather)
     metar           = {
       enabled   = true,   -- turn METAR on/off
@@ -172,6 +202,8 @@ return {
       wrap_col  = 43,
       pad_cols  = 15,
       max_lines = 5, -- limit METAR to this many lines (ellipsis on last if truncated)
+      offset_x  = 0, -- horizontal offset from arc apex (px)
+      offset_y  = 0, -- vertical offset (px)
     },
 
     -- TAF block (Terminal Aerodrome Forecast)
@@ -182,6 +214,8 @@ return {
       pad_cols    = 15,
       max_lines   = 4,
       indent_cols = 5, -- extra spaces for every line after the first
+      offset_x    = 0, -- horizontal offset from arc apex (px)
+      offset_y    = 0, -- vertical offset (px)
     },
 
     -- SIGMET / AIRMET advisories
@@ -192,6 +226,8 @@ return {
       wrap_col  = 42,     -- line width for wrapping
       pad_cols  = 16,     -- indent to match METAR/TAF
       max_lines = 3,      -- cap lines shown (ellipsis on last if truncated)
+      offset_x  = 0,      -- horizontal offset from arc apex (px)
+      offset_y  = 0,      -- vertical offset (px)
     },
 
     -- 6-day forecast layout (tile strip under the main widget)
@@ -250,10 +286,11 @@ return {
     hide_when_inactive = false, -- set to false to always show the widget
     idle_hide_after_s  = 10,    -- your existing timeout
     inactive_message   = "Play music, feel better",
+    widget_w           = 640,   -- widget width for cover_line.lua centering (when conky_window isn't available)
 
     center             = {
-      x = 282,
-      y = 185,
+      x = 0,
+      y = 0,
     },
 
     bars               = {
@@ -320,10 +357,10 @@ return {
     -- If art (dx/dy/w/h) is present, art_fixed is ignored.
     ----------------------------------------------------------------
     art                = {
-      dx = 0,  -- x offset from arc anchor to art center
-      dy = 6,  -- y offset from arc anchor to art center
-      w  = 62, -- width  (pixels)
-      h  = 60, -- height (pixels)
+      dx = 0,   -- x offset from arc anchor to art center
+      dy = -13, -- y offset from arc anchor to art center
+      w  = 62,  -- width  (pixels)
+      h  = 60,  -- height (pixels)
     },
     -- Legacy fallback (absolute screen coordinates)
     art_fixed          = {

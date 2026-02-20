@@ -233,21 +233,34 @@ end
 
 -- =====================================================================
 -- 2. Horizon arc geometry
---    - arc center uses theme.weather.center
---    - helpers for angle normalization and visible span check
+--    - arc center uses weather.center by default
+--    - weather.center_mode=auto_x centers X using window width
+--    - weather.center_offset adds fine offsets after centering
 -- =====================================================================
 
--- Compute arc center (cx,cy) from icon geometry + theme.weather.arc.*
+-- Compute arc center (cx,cy) from theme.weather.*
 local function get_arc_geometry()
   -- local ix, iy, iw = icon_geom()
   -- local dx, dy, r, sdeg, edeg = arc_geom()
   local r = tonumber(tget(THEME, "weather.arc.r")) or 170
   local sdeg = tonumber(tget(THEME, "weather.arc.start")) or 180
   local edeg = tonumber(tget(THEME, "weather.arc.end")) or 0
-  -- local cx = ix + (iw / 2) + dx
-  -- local cy = iy + (iw / 2) + dy
-  local cx = THEME.weather.center.x
-  local cy = THEME.weather.center.y
+  local center = (THEME.weather and THEME.weather.center) or {}
+  local cx = tonumber(center.x) or 0
+  local cy = tonumber(center.y) or 0
+  local mode = tget(THEME, "weather.center_mode") or "manual"
+  local offx = tonumber(tget(THEME, "weather.center_offset.x")) or 0
+  local offy = tonumber(tget(THEME, "weather.center_offset.y")) or 0
+
+  if mode == "auto_x" then
+    local win_w = (conky_window and conky_window.width) or 0
+    if win_w > 0 then
+      cx = (win_w / 2)
+    end
+  end
+
+  cx = cx + offx
+  cy = cy + offy
   return cx, cy, r, sdeg, edeg
 end
 
@@ -299,6 +312,7 @@ function conky_owm(key)
   if key == "sunset" then return fmt_hhmm(read_field(".sys.sunset")) end
 
   -- Drawing entrypoints
+  if key == "draw_main" then return conky_owm_draw_main() or "" end
   if key == "draw_horizon" then return conky_owm_draw_horizon() or "" end
   if key == "sun_labels" then return conky_owm_sun_labels() or "" end
 
@@ -321,6 +335,144 @@ end
 local has_cairo = pcall(require, "cairo")
 
 
+
+-- =====================================================================
+-- 4. Drawing: main icon + city + temp/humidity (center-relative)
+--    Called via: ${lua_parse owm draw_main}
+-- =====================================================================
+function conky_owm_draw_main()
+  if not has_cairo or not conky_window then return "" end
+
+  local cs = cairo_xlib_surface_create(conky_window.display,
+    conky_window.drawable,
+    conky_window.visual,
+    conky_window.width,
+    conky_window.height)
+  local cr = cairo_create(cs)
+  cairo_save(cr)
+
+  local cx, cy = get_arc_geometry()
+
+  local function tnum(path, default)
+    local v = tget(THEME, path)
+    v = tonumber(v)
+    if v == nil then return default end
+    return v
+  end
+
+  local function hex_to_rgba(hex, a)
+    hex = (hex or "A0A0A0"):gsub("#", "")
+    local r_ = tonumber(hex:sub(1, 2), 16) / 255
+    local g_ = tonumber(hex:sub(3, 4), 16) / 255
+    local b_ = tonumber(hex:sub(5, 6), 16) / 255
+    return r_, g_, b_, (a == nil and 1 or a)
+  end
+
+  local function draw_text_left(x, y, text, pt, color)
+    if not text or text == "" then return end
+    cairo_select_font_face(cr, "DejaVu Sans Mono", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
+    cairo_set_font_size(cr, pt)
+    cairo_set_source_rgba(cr, color[1], color[2], color[3], color[4] or 1)
+    cairo_move_to(cr, x, y)
+    cairo_show_text(cr, text)
+    cairo_new_path(cr)
+  end
+
+  local function draw_text_center_x(x, y, text, pt, color)
+    if not text or text == "" then return end
+    cairo_select_font_face(cr, "DejaVu Sans Mono", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
+    cairo_set_font_size(cr, pt)
+    cairo_set_source_rgba(cr, color[1], color[2], color[3], color[4] or 1)
+    local ext = cairo_text_extents_t:create()
+    cairo_text_extents(cr, text, ext)
+    cairo_move_to(cr, x - ext.width / 2 - ext.x_bearing, y)
+    cairo_show_text(cr, text)
+    cairo_new_path(cr)
+  end
+
+  local function draw_png_centered_cairo_local(cr, path, cx, cy, size)
+    local img = cairo_image_surface_create_from_png(path)
+    if (not img) or (cairo_surface_status(img) ~= 0) then
+      if img then cairo_surface_destroy(img) end
+      return false
+    end
+    local w = cairo_image_surface_get_width(img)
+    local h = cairo_image_surface_get_height(img)
+    if (not w or w == 0) or (not h or h == 0) then
+      cairo_surface_destroy(img)
+      return false
+    end
+    local scale = size / math.max(w, h)
+    local sw, sh = w * scale, h * scale
+    local ox, oy = cx - (sw / 2), cy - (sh / 2)
+
+    cairo_save(cr)
+    cairo_translate(cr, ox, oy)
+    cairo_scale(cr, scale, scale)
+    cairo_set_source_surface(cr, img, 0, 0)
+    cairo_paint(cr)
+    cairo_restore(cr)
+
+    cairo_surface_destroy(img)
+    return true
+  end
+
+  local icon_size   = tnum("weather.main.icon_size", 60)
+  local icon_dx     = tnum("weather.main.icon_dx", -160)
+  local icon_dy     = tnum("weather.main.icon_dy", -84)
+
+  local city_dx     = tnum("weather.main.city_dx", -146)
+  local city_dy     = tnum("weather.main.city_dy", -130)
+  local city_pt     = tnum("weather.main.city_pt", 8)
+
+  local temp_dx     = tnum("weather.main.temp_dx", -100)
+  local temp_dy     = tnum("weather.main.temp_dy", -50)
+  local temp_pt     = tnum("weather.main.temp_pt", 26)
+
+  local humidity_dx = tnum("weather.main.humidity_dx", -92)
+  local humidity_dy = tnum("weather.main.humidity_dy", -12)
+  local humidity_pt = tnum("weather.main.humidity_pt", 12)
+
+  local base_col    = { hex_to_rgba(THEME.default_color or "FFFFFF", 1.0) }
+  local dim_col     = { hex_to_rgba(THEME.color1 or "A0A0A0", 1.0) }
+
+  local city        = read_field(".name")
+  draw_text_center_x(cx + city_dx, cy + city_dy, city, city_pt, dim_col)
+
+  local icon_cache_dir = CACHE_DIR .. "/icons"
+  do
+    local v = tget(THEME, "weather.icon_cache_dir")
+    if v ~= nil and v ~= "" then
+      v = tostring(v)
+      if v:sub(1, 1) == "/" then
+        icon_cache_dir = v
+      else
+        icon_cache_dir = CACHE_DIR .. "/" .. v
+      end
+    end
+  end
+  local icon_path = icon_cache_dir .. "/current.png"
+  if icon_size > 0 and file_exists(icon_path) then
+    draw_png_centered_cairo_local(cr, icon_path, cx + icon_dx, cy + icon_dy, icon_size)
+  end
+
+  local t = tonumber(read_field(".main.temp") or "")
+  local temp_txt = t and string.format("%.0f°", t) or nil
+  if temp_txt then
+    draw_text_left(cx + temp_dx, cy + temp_dy, temp_txt, temp_pt, base_col)
+  end
+
+  local h = read_field(".main.humidity")
+  local hum_txt = h and string.format("%s%%", h) or nil
+  if hum_txt then
+    draw_text_left(cx + humidity_dx, cy + humidity_dy, hum_txt, humidity_pt, dim_col)
+  end
+
+  cairo_restore(cr)
+  cairo_destroy(cr)
+  cairo_surface_destroy(cs)
+  return ""
+end
 
 -- =====================================================================
 -- 4. Drawing: horizon arc + direction labels + sun/moon + planets
@@ -396,14 +548,14 @@ function conky_owm_draw_horizon()
 
   -- Weather hline + vline (theme-driven)
   do
-    local H = (THEME.weather.hline or {})
-    local len = tonumber(H.length) or 320
-    local lw  = tonumber(H.width) or 1
-    local dy  = tonumber(H.dy) or 0
-    local col = H.color or "A0A0A0"
-    local y   = cy + dy
-    local x1  = cx - (len / 2)
-    local x2  = cx + (len / 2)
+    local H              = (THEME.weather.hline or {})
+    local len            = tonumber(H.length) or 320
+    local lw             = tonumber(H.width) or 1
+    local dy             = tonumber(H.dy) or 0
+    local col            = H.color or "A0A0A0"
+    local y              = cy + dy
+    local x1             = cx - (len / 2)
+    local x2             = cx + (len / 2)
     local r_, g_, b_, a_ = hex_to_rgba(col, 1.0)
 
     cairo_set_source_rgba(cr, r_, g_, b_, a_)
@@ -414,15 +566,15 @@ function conky_owm_draw_horizon()
   end
 
   do
-    local V = (THEME.weather.vline or {})
-    local len = tonumber(V.length) or 60
-    local lw  = tonumber(V.width) or 2
-    local dx  = tonumber(V.dx) or 0
-    local dy  = tonumber(V.dy) or 0
-    local col = V.color or "A0A0A0"
-    local x   = cx + dx
-    local y1  = cy + dy
-    local y2  = y1 + len
+    local V              = (THEME.weather.vline or {})
+    local len            = tonumber(V.length) or 60
+    local lw             = tonumber(V.width) or 2
+    local dx             = tonumber(V.dx) or 0
+    local dy             = tonumber(V.dy) or 0
+    local col            = V.color or "A0A0A0"
+    local x              = cx + dx
+    local y1             = cy + dy
+    local y2             = y1 + len
     local r_, g_, b_, a_ = hex_to_rgba(col, 1.0)
 
     cairo_set_source_rgba(cr, r_, g_, b_, a_)
@@ -1087,22 +1239,35 @@ function conky_owm_draw_forecast_placeholder()
     return default
   end
 
-  local cfg    = tget_or("weather.forecast", nil) or tget_or("forecast", nil) or {}
-  local fdy    = tonumber(tget(THEME, "weather.forecast.dy")) or 0
-  local F      = (THEME.weather and THEME.weather.forecast) or {}
-  local origin = cfg.origin or { x = 165, y = 260 }
-  local tiles  = tonumber(F.tiles) or cfg.tiles or 6
+  local cfg       = tget_or("weather.forecast", nil) or tget_or("forecast", nil) or {}
+  local fdy       = tonumber(tget(THEME, "weather.forecast.dy")) or 0
+  local F         = (THEME.weather and THEME.weather.forecast) or {}
+  local origin    = cfg.origin or { x = 165, y = 260 }
+  local tiles     = tonumber(F.tiles) or cfg.tiles or 6
   local max_tiles = 6
   if tiles > max_tiles then tiles = max_tiles end
   if tiles < 1 then tiles = 1 end
-  local tile   = cfg.tile or { w = 64, h = 110 }
-  local tile_w = tonumber(F.tile_w) or tile.w or 64
-  local gap    = tonumber(F.gap) or cfg.gap or 34
-  local alpha  = (cfg.alpha ~= nil) and cfg.alpha or 1.0
+  local tile           = cfg.tile or { w = 64, h = 110 }
+  local tile_w         = tonumber(F.tile_w) or tile.w or 64
+  local gap            = tonumber(F.gap) or cfg.gap or 34
+  local alpha          = (cfg.alpha ~= nil) and cfg.alpha or 1.0
 
-  local date   = cfg.date or { pt = 11, dy = 0, color = { 0.85, 0.85, 0.85, 1.0 } }
-  local icon   = cfg.icon or { size = 44, dy = 20, dir = CACHE_DIR .. "/icons" }
-  local temps  = cfg.temps or { pt = 12, dy = 74, color_hi = { 1, 1, 1, 1 }, color_lo = { 0.7, 0.7, 0.7, 1 } }
+  local date           = cfg.date or { pt = 11, dy = 0, color = { 0.85, 0.85, 0.85, 1.0 } }
+  local icon_cache_dir = CACHE_DIR .. "/icons"
+  do
+    local v = tget(THEME, "weather.icon_cache_dir")
+    if v ~= nil and v ~= "" then
+      v = tostring(v)
+      if v:sub(1, 1) == "/" then
+        icon_cache_dir = v
+      else
+        icon_cache_dir = CACHE_DIR .. "/" .. v
+      end
+    end
+  end
+  local icon = cfg.icon or { size = 44, dy = 20 }
+  if icon.dir == nil or icon.dir == "" then icon.dir = icon_cache_dir end
+  local temps = cfg.temps or { pt = 12, dy = 74, color_hi = { 1, 1, 1, 1 }, color_lo = { 0.7, 0.7, 0.7, 1 } }
 
   -- text helper
   local function draw_centered_text(x, y, text, pt, color)
@@ -1122,7 +1287,7 @@ function conky_owm_draw_forecast_placeholder()
   local ox = (origin and tonumber(origin.x)) or 0
   local oy = (origin and tonumber(origin.y)) or 0
   local strip_w = (tiles * tile_w) + ((tiles - 1) * gap)
-  local cx = (THEME.weather and THEME.weather.center and THEME.weather.center.x) or 0
+  local cx, _ = get_arc_geometry()
   if F.center == true then
     ox = cx - (strip_w / 2)
   end
@@ -1219,29 +1384,29 @@ function conky_owm_sun_labels()
   local time_col                      = tget(THEME, "weather.sun_time_labels.color") or { 0.63, 0.63, 0.63, 1.0 }
   if type(time_col) ~= "table" then time_col = { 0.63, 0.63, 0.63, 1.0 } end
 
-  local hl_dy       = tonumber(tget(THEME, "horizon_labels.dy")) or 18
-  local time_dy     = tonumber(tget(THEME, "weather.sun_time_labels.dy")) or (hl_dy + 14)
-  local lxo         = tonumber(tget(THEME, "weather.sun_time_labels.lx_offset")) or 0
-  local rxo         = tonumber(tget(THEME, "weather.sun_time_labels.rx_offset")) or 0
+  local hl_dy         = tonumber(tget(THEME, "horizon_labels.dy")) or 18
+  local time_dy       = tonumber(tget(THEME, "weather.sun_time_labels.dy")) or (hl_dy + 14)
+  local lxo           = tonumber(tget(THEME, "weather.sun_time_labels.lx_offset")) or 0
+  local rxo           = tonumber(tget(THEME, "weather.sun_time_labels.rx_offset")) or 0
 
-  ly, ry            = ly + time_dy, ry + time_dy
-  lx, rx            = lx + lxo, rx + rxo
+  ly, ry              = ly + time_dy, ry + time_dy
+  lx, rx              = lx + lxo, rx + rxo
 
   -- Times + night flip
-  local sr_ts       = tonumber(read_field(".sys.sunrise") or "")
-  local ss_ts       = tonumber(read_field(".sys.sunset") or "")
-  local sunrise     = fmt_hhmm(sr_ts)
-  local sunset      = fmt_hhmm(ss_ts)
-  local now         = os.time()
-  local is_night    = (sr_ts and ss_ts) and (now < sr_ts or now > ss_ts)
+  local sr_ts         = tonumber(read_field(".sys.sunrise") or "")
+  local ss_ts         = tonumber(read_field(".sys.sunset") or "")
+  local sunrise       = fmt_hhmm(sr_ts)
+  local sunset        = fmt_hhmm(ss_ts)
+  local now           = os.time()
+  local is_night      = (sr_ts and ss_ts) and (now < sr_ts or now > ss_ts)
 
-  local L = THEME.weather.sun_time_labels or {}
+  local L             = THEME.weather.sun_time_labels or {}
   local sunrise_label = L.sunrise_text or "Sunrise"
-  local sunset_label  = L.sunset_text  or "Sunset"
+  local sunset_label  = L.sunset_text or "Sunset"
 
-  local left_label  = is_night and (sunrise_label .. " " .. (sunrise ~= "" and sunrise or "--:--"))
+  local left_label    = is_night and (sunrise_label .. " " .. (sunrise ~= "" and sunrise or "--:--"))
       or (sunset_label .. " " .. (sunset ~= "" and sunset or "--:--"))
-  local right_label = is_night and (sunset_label .. " " .. (sunset ~= "" and sunset or "--:--"))
+  local right_label   = is_night and (sunset_label .. " " .. (sunset ~= "" and sunset or "--:--"))
       or (sunrise_label .. " " .. (sunrise ~= "" and sunrise or "--:--"))
 
   -- Draw text as path+fill (no path leaks), centered on anchors
@@ -1277,6 +1442,26 @@ function conky_owm_sun_labels_call() return conky_owm_sun_labels() end
 --    Scripts:
 --      metar_ob.sh, taf_wrap.sh, airsig_filter.sh
 -- =====================================================================
+-- Alignment helper for aviation blocks (centered on arc apex)
+local function aviation_prefix(kind)
+  local dx = tonumber(tget(THEME, "weather." .. kind .. ".offset_x")) or 0
+  local dy = tonumber(tget(THEME, "weather." .. kind .. ".offset_y")) or 0
+  local pad_cols = tonumber(tget(THEME, "weather." .. kind .. ".pad_cols")) or 0
+  local char_px = tonumber(tget(THEME, "weather.aviation.char_px"))
+      or tonumber(tget(THEME, "char_px")) or 7
+  local cx = select(1, get_arc_geometry())
+  local x = math.floor((cx + dx - (pad_cols * char_px)) + 0.5)
+  local p = string.format("${goto %d}", x)
+  if dy ~= 0 then p = string.format("${voffset %d}%s", dy, p) end
+  return p
+end
+
+local function aviation_apply_prefix(kind, out)
+  if not out or out == "" then return "" end
+  local prefix = aviation_prefix(kind)
+  return prefix .. out:gsub("\n", "\n" .. prefix)
+end
+
 -- METAR: fetch + wrap to a max line count, with optional left padding
 function conky_metar()
   -- on/off
@@ -1317,6 +1502,8 @@ function conky_metar()
     local pad = string.rep(" ", cols)
     out = pad .. out:gsub("\n", "\n" .. pad)
   end
+
+  out = aviation_apply_prefix("metar", out)
   return out
 end
 
@@ -1385,7 +1572,9 @@ function conky_taf()
     end
   end
 
-  return table.concat(lines, "\n")
+  local out = table.concat(lines, "\n")
+  out = aviation_apply_prefix("taf", out)
+  return out
 end
 
 -- SIGMET / AIRMET advisories: TSV → wrapped human-readable lines
@@ -1415,6 +1604,7 @@ function conky_advisories()
   if raw == "" then
     local msg = string.format("No SIGMET/AIRMET within %d NM of %s", radius, station)
     if cols and cols > 0 then msg = string.rep(" ", cols) .. msg end
+    msg = aviation_apply_prefix("advisories", msg)
     return msg
   end
 
@@ -1428,6 +1618,7 @@ function conky_advisories()
   if #lines == 0 then
     local msg = string.format("No SIGMET/AIRMET within %d NM of %s", radius, station)
     if cols and cols > 0 then msg = string.rep(" ", cols) .. msg end
+    msg = aviation_apply_prefix("advisories", msg)
     return msg
   end
 
@@ -1467,5 +1658,7 @@ function conky_advisories()
     for i = 1, #wrapped do wrapped[i] = pad .. wrapped[i] end
   end
 
-  return table.concat(wrapped, "\n")
+  local out = table.concat(wrapped, "\n")
+  out = aviation_apply_prefix("advisories", out)
+  return out
 end

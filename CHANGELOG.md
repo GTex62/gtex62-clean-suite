@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented here.
 
+## [v0.4.5] - 2026-02-20
+- Added `monitor_head` in `theme.lua`; widgets now honor it via `xinerama_head`.
+- Weather widget arc apex now aligns with widget center with auto X centering and new offsets for main and aviation blocks.
+- Forecast and aviation block positioning now respect the arc center with configurable tuning knobs.
+- Music widget alignment now follows the weather apex; album art centering uses `theme.music.widget_w` with fallback handling.
+- Documentation updated for new alignment knobs and widget centering guidance.
+
 ## [v0.4.0] - 2026-02-03
 - Weather + music widget alignment now centers on the arc apex (visual layout tightened).
 - Removed dependency on `vline.png` (now drawn via Lua/Cairo).

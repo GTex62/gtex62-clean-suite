@@ -5,7 +5,6 @@
 [![GitHub issues](https://img.shields.io/github/issues/GTex62/gtex62-clean-suite.svg)](https://github.com/GTex62/gtex62-clean-suite/issues)
 [![Last commit](https://img.shields.io/github/last-commit/GTex62/gtex62-clean-suite.svg)](https://github.com/GTex62/gtex62-clean-suite/commits/main)
 
-
 A modular, minimalist Conky desktop suite for Linux Mint (and other
 distros), inspired by several Rainmeter skins and rebuilt for Conky
 using Lua, custom widgets, themed slash bars, GPU/VRAM bars, weather
@@ -46,107 +45,116 @@ while keeping everything text-first, elegant, and unobtrusive.
 ## Screenshots
 
 ### Full Suite
+
 ![Clean Conky Suite](screenshots/gtex62-clean-suite2.png)
 
 ### Weather + Horizon Arc
+
 ![Time and Weather](screenshots/time-and-weather.png)
 
 ### System Info
+
 ![System Info](screenshots/sys-info.png)
 
 ### Network Info
+
 ![Network Info](screenshots/network-info.png)
 
-### Notes Widget
+### Notes Screenshot
+
 ![Notes](screenshots/notes.png)
 
-### Calendar Widget
+### Calendar Screenshot
+
 ![Calendar](screenshots/calendar.png)
 
-### Music / Now-Playing Widget
+### Music Screenshot
+
 ![Music](screenshots/music.png)
 
 Additional states:
+
 - `music1.png`
 - `music2.png`
 
-
 ## Wallpapers
 
-This Conky suite includes original wallpapers created by **Geoffrey Greene**.  
+This Conky suite includes original wallpapers created by **Geoffrey Greene**.
 They are optional, but recommended to match the aesthetic shown in screenshots.
-7680x2170
+Resolution: 7680x2170.
 
 Files:
 
 - `wallpapers/painted-canvas-bw-01.png` – Black & White
 - `wallpapers/painted-canvas-db-01.png` – Dark Blue
-- `wallpapers/painted-canvas-g-01.png`  – Green
+- `wallpapers/painted-canvas-g-01.png` – Green
 
 These wallpapers are licensed for **personal, non-commercial use**.
-
 
 ## Features
 
 ### System Information (sys-info.conky.conf)
 
--   CPU usage, load, and temperatures\
--   RAM usage\
--   Disk usage per mount\
--   OS, kernel, uptime, hostname\
--   System firmware info\
--   Logging of network interfaces\
--   Live throughput graph\
--   Fully configurable via `theme.lua`
+- CPU usage, load, and temperatures
+- RAM usage
+- Disk usage per mount
+- OS, kernel, uptime, hostname
+- System firmware info
+- Logging of network interfaces
+- Live throughput graph
+- Fully configurable via `theme.lua`
 
 ### GPU Widget
 
--   GPU usage slash bar\
--   VRAM usage slash bar\
--   Temperature\
--   Fan percentage\
--   Power draw (W)\
--   Driver version\
--   Automatic detection for NVIDIA (via `nvidia-smi`)
+- GPU usage slash bar
+- VRAM usage slash bar
+- Temperature
+- Fan percentage
+- Power draw (W)
+- Driver version
+- Automatic detection for NVIDIA (via `nvidia-smi`)
 
 ### Weather Widget
 
--   Weather arc inspired by ASTROweather\
--   Current METAR, TAF, AIRMET/SIGMET + OWM blended\
--   5-day forecast\
--   Sunrise/sunset\
--   Wind, humidity, pressure\
--   Icons + text\
--   Everything styled through Lua
+- Weather arc inspired by ASTROweather
+- Current METAR, TAF, AIRMET/SIGMET + OWM blended
+- 5-day forecast
+- Sunrise/sunset
+- Wind, humidity, pressure
+- Icons + text
+- Icon cache dir override via `theme.weather.icon_cache_dir`
+- Everything styled through Lua
 
 ### Calendar Widget
 
--   Month calendar with current day highlight\
--   Clean typography\
--   Minimalist layout
+- Month calendar with current day highlight
+- Clean typography
+- Minimalist layout
 
 ### Notes Widget
 
--   Simple and elegant notes panel\
--   Readable right-hand column\
--   Monospaced or themed fonts
+- Simple and elegant notes panel
+- Readable right-hand column
+- Monospaced or themed fonts
 
 ### Music / Now-Playing Widget
 
--   Track title/artist/album with marquee scrolling\
--   Arc progress + time labels\
--   HR baseline line drawn in Lua (tweak with `theme.music.baseline.dy`)\
--   Album art (cached cover; anchor is `theme.music.center`, offsets in `theme.music.art`, fallback `theme.music.art_fixed`)
+- Track title/artist/album with marquee scrolling
+- Arc progress + time labels
+- HR baseline line drawn in Lua (tweak with `theme.music.baseline.dy`)
+- Album art (cached cover; anchor is `theme.music.center`, offsets in `theme.music.art`, fallback `theme.music.art_fixed`)
 
 ### Network & Infrastructure Widgets
 
 #### pfSense Widget
+
 - Dedicated pfSense monitoring widget (traffic arcs, totals, pfBlockerNG, Pi-hole status)
 - Configured via `theme-pf.lua` and environment variable `PFSENSE_HOST`
 - Built-in SSH safety and self-protection to prevent sshguard lockouts
 - See: `README-pfsense-widget.md`
 
 #### Access Point (Zyxel WBE530) Widget
+
 - Live status and client summaries for Zyxel APs
 - Configured via environment variables `AP_IPS` and `AP_LABELS`
 - Uses helper scripts in `scripts/`
@@ -155,6 +163,7 @@ These wallpapers are licensed for **personal, non-commercial use**.
 - This is intentional to prevent sshguard lockouts and clears automatically
 
 ##### Optional: IP-to-label map (ap_ipmap.csv)
+
 The optional `scripts/ap_ipmap.csv.example` file is an IP-to-label map used by the AP scripts/widget to keep
 AP ordering and labels consistent.
 To use it, copy `scripts/ap_ipmap.csv.example` to `scripts/ap_ipmap.csv` and edit as needed (`scripts/ap_ipmap.csv`
@@ -164,30 +173,38 @@ The expected format is a simple CSV with columns like `IP,label` (one AP per lin
 ### Lyrics Window
 
 - Copy `widgets/lyrics.vars.example` to `widgets/lyrics.vars` and adjust paths and providers
-- Provider tiers:
-  - **NOAPI** — default, no keys required  
-    Default providers: `lrclib`, `lyrics_ovh`, `lololyrics`, `chartlyrics`
-  - **SCRAPE** — optional, may break, use at your own risk  
-    Optional providers: `azlyrics`, `songlyrics`, `elyrics`, `letras`, `lyricfind`, `musixmatch`
-  - **API** — requires keys  
-    Providers: `genius` (token required)
+
+Provider tiers:
+
+- **NOAPI** — default, no keys required
+  Default providers: `lrclib`, `lyrics_ovh`, `lololyrics`, `chartlyrics`
+- **SCRAPE** — optional, may break, use at your own risk
+  Optional providers: `azlyrics`, `songlyrics`, `elyrics`, `letras`, `lyricfind`, `musixmatch`
+- **API** — requires keys
+  Providers: `genius` (token required)
+
 - The order listed in `lyrics.vars` is the order searched
 - `widgets/lyrics.vars` is gitignored to protect secrets
-- Manual lyrics:
-  - Create `Artist - Title.txt` or `.lrc` files
-  - Store them in `~/Music/lyrics/`
-  - Copy/paste lyrics from a website
-  - The widget picks them up automatically on the next track
+
+Manual lyrics:
+
+- Create `Artist - Title.txt` or `.lrc` files
+- Store them in `~/Music/lyrics/`
+- Copy/paste lyrics from a website
+- The widget picks them up automatically on the next track
 
 ### Shared Theme System
 
-The `theme.lua` file controls: - Font family\
-- Font size\
-- Colors\
-- Slash bar width & style\
-- Column positions\
+The `theme.lua` file controls:
+
+- Font family
+- Font size
+- Colors
+- Slash bar width & style
+- Column positions
 - Spacing and separators
 - Optional per-widget tweaks
+
 ---
 
 ## Folder Structure
@@ -228,12 +245,12 @@ ${CONKY_SUITE_DIR:-~/.config/conky/gtex62-clean-suite}/
 
 ## Requirements
 
-- Conky (with Lua support) — e.g. `conky-all` on Debian/Ubuntu/Mint  
-- `curl`  
-- `jq`  
-- `lm-sensors` (for temperatures)  
-- `playerctl` (music metadata/status)  
-- `pactl` (optional; volume/mute via PulseAudio/PipeWire)  
+- Conky (with Lua support) — e.g. `conky-all` on Debian/Ubuntu/Mint
+- `curl`
+- `jq`
+- `lm-sensors` (for temperatures)
+- `playerctl` (music metadata/status)
+- `pactl` (optional; volume/mute via PulseAudio/PipeWire)
 - For GPU widget:
   - NVIDIA GPU
   - Working `nvidia-smi` command
@@ -244,14 +261,14 @@ ${CONKY_SUITE_DIR:-~/.config/conky/gtex62-clean-suite}/
 
 ### 1. Install Conky + dependencies
 
-``` bash
+```bash
 sudo apt install conky-all curl jq lm-sensors playerctl pulseaudio-utils
 sudo sensors-detect
 ```
 
 ### 2. Clone this repo
 
-``` bash
+```bash
 mkdir -p ~/.config/conky
 cd ~/.config/conky
 git clone https://github.com/GTex62/gtex62-clean-suite.git
@@ -303,13 +320,13 @@ xed owm.vars
 
 In `owm.env`:
 
-- Replace `YOUR_OPENWEATHER_API_KEY_HERE` with your actual API key.  
+- Replace `YOUR_OPENWEATHER_API_KEY_HERE` with your actual API key.
   (Do **not** commit the real key to Git.)
 
 In `owm.vars`:
 
-- Set `OWM_DAILY_CACHE` to match your cache directory (or full path):  
-  `OWM_DAILY_CACHE="${CONKY_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/conky}/owm_forecast.json"`  
+- Set `OWM_DAILY_CACHE` to match your cache directory (or full path):
+  `OWM_DAILY_CACHE="${CONKY_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/conky}/owm_forecast.json"`
 - Optionally adjust LAT/LON/UNITS/LANG to match your location.
 
 ---
@@ -317,9 +334,11 @@ In `owm.vars`:
 ### 4. Start widgets
 
 The suite includes a helper script to start all widgets at once:
+
 ```bash
 ${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/scripts/start-conky.sh &
 ```
+
 If you set `CONKY_SUITE_DIR`, use `$CONKY_SUITE_DIR/scripts/start-conky.sh` instead.
 
 ### Optional: Toggle a single widget with a launcher script
@@ -328,6 +347,7 @@ Some widgets (like the Zyxel WBE530 AP widget) may require environment exports f
 You can create a personal launcher in `~/.local/bin` (e.g., `apwbe`) that sources that file and starts/stops
 Conky using `widgets/ap-wbe530.conky.conf`. This launcher is intentionally not included in the repo because it’s
 user-specific.
+
 ```bash
 CFG="${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/widgets/ap-wbe530.conky.conf"
 source "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/scripts/conky-env.sh"
@@ -339,7 +359,8 @@ fi
 ```
 
 You can also start individual widgets manually if you prefer (use `$CONKY_SUITE_DIR` if set):
-``` bash
+
+```bash
 conky -c "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/widgets/sys-info.conky.conf" &
 conky -c "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/widgets/weather.conky.conf" &
 conky -c "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/widgets/calendar.conky.conf" &
@@ -351,6 +372,7 @@ conky -c "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/widgets/net
 conky -c "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/widgets/ap-wbe530.conky.conf" &
 conky -c "${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/widgets/pfsense.conky.conf" &
 ```
+
 Add the script to your desktop environment’s startup applications to launch the suite automatically on login.
 
 ---
@@ -359,17 +381,22 @@ Add the script to your desktop environment’s startup applications to launch th
 
 Each `.conky.conf` file has its own `alignment`, `gap_x`, and `gap_y` settings tuned for a dual-monitor setup on the original system (right-side secondary display).
 
+You can also set `monitor_head` in `theme.lua` to target a specific monitor ("0" = primary, "1" = secondary). Each widget reads this value and applies it via `xinerama_head`.
+
 If widgets appear off-screen or stacked incorrectly:
 
-1. Open the `.conky.conf` file for the widget you want to move.  
+1. Open the `.conky.conf` file for the widget you want to move.
 2. Look for these lines near the top:
+
    ```lua
    alignment = 'top_right',
    gap_x = 2780,
    gap_y = 50,
    ```
-3. Adjust `alignment` (`top_left`, `top_right`, `bottom_left`, `bottom_right`, etc.) and `gap_x` / `gap_y` until the widget sits where you want it.  
+
+3. Adjust `alignment` (`top_left`, `top_right`, `bottom_left`, `bottom_right`, etc.) and `gap_x` / `gap_y` until the widget sits where you want it.
 4. Save and reload that widget:
+
    ```bash
    pkill conky
    ${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/scripts/start-conky.sh &
@@ -396,6 +423,14 @@ Things you can change there:
 - Spacing for separators and sections
 - Calendar spacing and padding
 - Weather arc and planet styling options (if you enable planets)
+- Weather main block positioning (weather.center + weather.main.* offsets for icon/city/temp/humidity)
+- Weather city label is centered on weather.center (use weather.main.city_dx to offset)
+- Weather arc centering (weather.center_mode + weather.center_offset for auto X centering)
+- Aviation block offsets (weather.metar/taf/advisories.offset_x, offset_y)
+- Aviation text width tuning (weather.aviation.char_px for pad_cols alignment)
+- Music widget arc alignment uses weather.center_mode/center_offset to match the weather apex
+- Music album art anchors to the apex via theme.music.art (cover_line.lua; art_fixed is a fallback)
+- Music album art centering (theme.music.widget_w for auto-x centering in cover_line.lua)
 - Music widget arc/bars, volume marker, and album art placement (theme.music.art, with theme.music.art_fixed as fallback)
 
 Each `.conky.conf` file uses the same shared theme, so adjusting `theme.lua` lets you redesign the look of the entire suite without editing each widget individually.
@@ -455,21 +490,10 @@ and Conky reloads.
 
 ## Credits & Inspirations
 
-### Plainext (Rainmeter → Conky)
-
-https://github.com/EnhancedJax/Plainext
-
-### DesktopWidgets -- Network Info (Rainmeter)
-
-https://www.deviantart.com/g3xter/art/DesktopWidgets-Network-Info-713140520
-
-### ASTROweather (Rainmeter)
-
-https://www.deviantart.com/xenium/art/ASTROWeather-Weather-Skin-776886670
-
-### Amnio/Notes (Rainmeter)
-
-https://github.com/JosephB2000/Amnio
+- [Plainext (Rainmeter → Conky)](https://github.com/EnhancedJax/Plainext)
+- [DesktopWidgets -- Network Info (Rainmeter)](https://www.deviantart.com/g3xter/art/DesktopWidgets-Network-Info-713140520)
+- [ASTROweather (Rainmeter)](https://www.deviantart.com/xenium/art/ASTROWeather-Weather-Skin-776886670)
+- [Amnio/Notes (Rainmeter)](https://github.com/JosephB2000/Amnio)
 
 ## License
 

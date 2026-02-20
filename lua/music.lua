@@ -41,6 +41,22 @@ local function tgetd(path, default)
   return v
 end
 
+local function popen_read(cmd)
+  if not io or type(io.popen) ~= "function" then return nil end
+  local f = io.popen(cmd); if not f then return nil end
+  local out = f:read("*a"); f:close()
+  if not out or out == "" then return nil end
+  return (out:gsub("%s+$", ""))
+end
+
+local function popen_read_line(cmd)
+  if not io or type(io.popen) ~= "function" then return nil end
+  local f = io.popen(cmd); if not f then return nil end
+  local out = f:read("*l"); f:close()
+  if not out or out == "" then return nil end
+  return out
+end
+
 --------------------------
 -- Helpers
 --------------------------
@@ -88,8 +104,22 @@ local function get_arc_geometry_weather()
   -- local cy = _iy + (_iw / 2) + _dy
   local _ix, _iy, _iw = icon_geom_weather()
   local _dx, _dy, r, sdeg, edeg = arc_geom_weather()
-  local cx = THEME.weather.center.x
-  local cy = THEME.weather.center.y
+  local center = (THEME.weather and THEME.weather.center) or {}
+  local cx = tonumber(center.x) or 0
+  local cy = tonumber(center.y) or 0
+  local mode = tget(THEME, "weather.center_mode") or "manual"
+  local offx = tonumber(tget(THEME, "weather.center_offset.x")) or 0
+  local offy = tonumber(tget(THEME, "weather.center_offset.y")) or 0
+
+  if mode == "auto_x" then
+    local win_w = (conky_window and conky_window.width) or 0
+    if win_w > 0 then
+      cx = (win_w / 2)
+    end
+  end
+
+  cx = cx + offx
+  cy = cy + offy
   return cx, cy, r, sdeg, edeg
 end
 
@@ -108,11 +138,7 @@ function conky_music_visible()
   end
 
   local now = os.time()
-  local status = ""
-  local f = io.popen("playerctl status 2>/dev/null")
-  if f then
-    status = f:read("*l") or ""; f:close()
-  end
+  local status = popen_read_line("playerctl status 2>/dev/null") or ""
 
   if status == "Playing" or status == "Paused" then
     MUSIC_LAST_SEEN = now
@@ -130,10 +156,7 @@ end
 -- Player meta (playerctl)
 --------------------------
 local function read_cmd(cmd)
-  local f = io.popen(cmd); if not f then return nil end
-  local out = f:read("*a"); f:close()
-  if not out or out == "" then return nil end
-  return (out:gsub("%s+$", ""))
+  return popen_read(cmd)
 end
 
 -- Returns volume as a fraction 0..1 (or nil if unknown)
@@ -228,10 +251,7 @@ end
 local COVER_CACHE = (CACHE_DIR .. "/nowplaying_cover.png")
 
 local function _read_cmd_simple(cmd)
-  local f = io.popen(cmd); if not f then return nil end
-  local out = f:read("*a"); f:close()
-  if not out or out == "" then return nil end
-  return (out:gsub("%s+$", ""))
+  return popen_read(cmd)
 end
 local function _get_art_url()
   local url = _read_cmd_simple("playerctl metadata mpris:artUrl 2>/dev/null")
@@ -254,7 +274,6 @@ local function _ensure_cover_cached()
 
   return nil
 end
-
 
 --------------------------
 -- Main draw
@@ -306,9 +325,7 @@ function conky_music_draw()
 
   -- update/clear cover art based on player status
   do
-    local f = io.popen("playerctl status 2>/dev/null")
-    local st = f and (f:read("*l") or "") or ""
-    if f then f:close() end
+    local st = popen_read_line("playerctl status 2>/dev/null") or ""
 
     if st == "Playing" or st == "Paused" then
       if type(_ensure_cover_cached) == "function" then _ensure_cover_cached() end
@@ -318,7 +335,6 @@ function conky_music_draw()
       -- (ok may be nil if file didn’t exist; that’s fine)
     end
   end
-
 
   local pos  = meta.pos_ms
   local len  = meta.len_ms
@@ -553,7 +569,7 @@ function conky_music_draw()
       local dx         = tonumber(cfg.dx)
       local field_w    = tonumber(cfg.field_w) or 320
       local field_x    = tonumber(cfg.field_x) or (cx - math.floor(field_w / 2))
-      local anchor_x   = (THEME.weather and THEME.weather.center and THEME.weather.center.x) or cx
+      local anchor_x   = cx
       local field_left
       if dx ~= nil then
         local field_cx = anchor_x + dx

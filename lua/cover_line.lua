@@ -20,8 +20,25 @@ local function tget(root, dotted)
 end
 
 local function get_arc_anchor()
-  local cx = tonumber(tget(THEME, "music.center.x")) or 0
-  local cy = tonumber(tget(THEME, "music.center.y")) or 0
+  local center = (THEME.weather and THEME.weather.center) or {}
+  local cx = tonumber(center.x) or 0
+  local cy = tonumber(center.y) or 0
+  local mode = tget(THEME, "weather.center_mode") or "manual"
+  local offx = tonumber(tget(THEME, "weather.center_offset.x")) or 0
+  local offy = tonumber(tget(THEME, "weather.center_offset.y")) or 0
+  local widget_w = tonumber(tget(THEME, "music.widget_w")) or 0
+
+  if mode == "auto_x" then
+    local win_w = (conky_window and conky_window.width) or 0
+    if win_w > 0 then
+      cx = (win_w / 2)
+    elseif widget_w > 0 then
+      cx = (widget_w / 2)
+    end
+  end
+
+  cx = cx + offx
+  cy = cy + offy
   return cx, cy
 end
 

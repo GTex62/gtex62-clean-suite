@@ -3,7 +3,18 @@ set -euo pipefail
 
 XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 CACHE_DIR="${CONKY_CACHE_DIR:-$XDG_CACHE_HOME/conky}"
+THEME_PATH="${CONKY_THEME_PATH:-${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}/theme.lua}"
+
+# Optional theme knob override (theme.lua: weather.icon_cache_dir)
+theme_icon_cache_dir="$(THEME_PATH="$THEME_PATH" lua -e 'local p=os.getenv("THEME_PATH"); local ok,t=pcall(dofile,p); if ok and type(t)=="table" then local s=t.weather and t.weather.icon_cache_dir; if s and s~="" then print(s) end end' 2>/dev/null || true)"
 ICON_DIR="$CACHE_DIR/icons"
+if [[ -n "$theme_icon_cache_dir" ]]; then
+  if [[ "$theme_icon_cache_dir" = /* ]]; then
+    ICON_DIR="$theme_icon_cache_dir"
+  else
+    ICON_DIR="$CACHE_DIR/$theme_icon_cache_dir"
+  fi
+fi
 FC_JSON="$CACHE_DIR/owm_forecast.json"
 OUT_VARS="$CACHE_DIR/owm_days.vars"
 LOG_FILE="$CACHE_DIR/owm_fetch.log"
@@ -11,23 +22,23 @@ LOG_FILE="$CACHE_DIR/owm_fetch.log"
 mkdir -p "$CACHE_DIR" "$ICON_DIR"
 [[ -s "$FC_JSON" ]] || exit 0
 
-# Use jq localtime+strftime instead of strflocaltime (for broader jq compatibility)
+# Use jq gmtime+strftime instead of strfgmtime (for broader jq compatibility)
 jq -r '
-  .city.timezone as $tz
+  (.city.timezone // 0) as $tz
   | .list
   | map(. + {
       local_dt: (.dt + $tz),
-      day:      ((.dt + $tz) | localtime | strftime("%Y-%m-%d")),
-      hour:     ((.dt + $tz) | localtime | strftime("%H") | tonumber)
+      day:      ((.dt + $tz) | gmtime | strftime("%Y-%m-%d")),
+      hour:     ((.dt + $tz) | gmtime | strftime("%H") | tonumber)
     })
   | group_by(.day)
   | map({
       day:  .[0].day,
-      name: (.[0].local_dt | localtime | strftime("%a")),
+      name: (.[0].local_dt | gmtime | strftime("%a")),
       hi:   (max_by(.main.temp).main.temp),
       lo:   (min_by(.main.temp).main.temp),
       icon: (
-        ( [ .[] | {icon:.weather[0].icon, hour:(.dt + $tz | localtime | strftime("%H") | tonumber)} ] ) as $arr
+        ( [ .[] | {icon:.weather[0].icon, hour:(.dt + $tz | gmtime | strftime("%H") | tonumber)} ] ) as $arr
         | ( [ $arr[] | select(.hour >= 10 and .hour <= 16) | .icon ] ) as $day
         | ( if ($day|length) > 0
             then ($day | group_by(.) | max_by(length)[0])
