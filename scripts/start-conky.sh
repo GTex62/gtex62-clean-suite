@@ -8,6 +8,8 @@ export AP_LABELS="${AP_LABELS:-Closet,Office,Great Room}" # Order must match AP_
 
 pkill -x conky 2>/dev/null || true
 
+xrandr --current >/dev/null 2>&1 || true
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DEFAULT_SUITE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 export CONKY_SUITE_DIR="${CONKY_SUITE_DIR:-$DEFAULT_SUITE_DIR}"
