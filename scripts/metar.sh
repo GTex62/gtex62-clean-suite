@@ -19,12 +19,15 @@ if [ -f "$CACHE" ] && [ $(( $(date +%s) - $(stat -c %Y "$CACHE") )) -lt "$AGE_LI
 fi
 
 # Fetch decoded METAR text (contains the 'ob:' line we strip later)
-if raw="$(curl -fsS "$URL" 2>/dev/null)"; then
-  printf "%s\n" "$raw" > "$CACHE"
-  cat "$CACHE"
-  exit 0
+tmp_cache="${CACHE}.tmp"
+if curl -fsS "$URL" -o "$tmp_cache" 2>/dev/null; then
+  if [ -s "$tmp_cache" ]; then
+    mv "$tmp_cache" "$CACHE"
+    cat "$CACHE"
+    exit 0
+  fi
+  rm -f "$tmp_cache"
 fi
 
 # Fallback to stale cache if fetch failed
 [ -f "$CACHE" ] && cat "$CACHE" || exit 1
-

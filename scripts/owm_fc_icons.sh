@@ -27,11 +27,16 @@ ensure_code_png() {
 }
 
 codes="$(jq -r '
-  .list
-  | group_by(.dt | strftime("%Y-%m-%d"))
+  (.city.timezone // 0) as $tz
+  | .list
+  | map(. + {
+      day:  ((.dt + $tz) | gmtime | strftime("%Y-%m-%d")),
+      hour: ((.dt + $tz) | gmtime | strftime("%H") | tonumber)
+    })
+  | group_by(.day)
   | .[:6]
   | map(
-      ( [ .[] | {icon:.weather[0].icon, hour:(.dt | strftime("%H") | tonumber)} ] ) as $arr
+      ( [ .[] | {icon:.weather[0].icon, hour:.hour} ] ) as $arr
       | ( [ $arr[] | select(.hour >= 10 and .hour <= 16) | .icon ] ) as $day
       | ( if ($day|length) > 0
           then ($day | group_by(.) | max_by(length)[0])
