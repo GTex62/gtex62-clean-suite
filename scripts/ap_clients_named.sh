@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GATE="$SCRIPT_DIR/pf-ssh-gate.sh"
+
+if ! "$GATE" allow; then
+  printf 'SSH PAUSED - AP\n'
+  exit 0
+fi
+
 SUITE_DIR="${CONKY_SUITE_DIR:-$HOME/.config/conky/gtex62-clean-suite}"
 CMD="$SUITE_DIR/scripts/zyxel_cmd.sh"
 MAP="$SUITE_DIR/scripts/ap_ipmap.csv"
